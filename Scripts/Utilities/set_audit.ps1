@@ -54,6 +54,7 @@ foreach ($m in $AttackFuncMatches) {
 
 # ── 2. Parse Trainer_Effects.gd ───────────────────────────────────────────────
 $TrainerGdText = Get-Content $TrainerGd -Raw
+$MainGdText    = Get-Content (Join-Path $Root "Scripts\Main_Match_Gameplay_Scripts\Main_Match_Core_Gameplay_Script.gd") -Raw
 
 $TrainerDispatchKeys = [System.Collections.Generic.HashSet[string]]::new([System.StringComparer]::OrdinalIgnoreCase)
 $TrainerKeyMatches = [regex]::Matches($TrainerGdText, '_trainer_dispatch\["([^"]+)"\]')
@@ -61,17 +62,38 @@ foreach ($m in $TrainerKeyMatches) {
     $TrainerDispatchKeys.Add($m.Groups[1].Value.ToLower()) | Out-Null
 }
 
+# Attached trainers routed through resolve_attached_trainer (not in _trainer_dispatch)
+$AttachedTrainerUids = [System.Collections.Generic.HashSet[string]]::new([System.StringComparer]::OrdinalIgnoreCase)
+foreach ($uid in @("gym1-99","gym1-117","gym2-101","gym2-115")) {
+    $AttachedTrainerUids.Add($uid) | Out-Null
+}
+# PlusPower/Defender identified by card name (multiple set printings)
+$AttachedTrainerNames = [System.Collections.Generic.HashSet[string]]::new([System.StringComparer]::OrdinalIgnoreCase)
+foreach ($n in @("pluspower","defender")) { $AttachedTrainerNames.Add($n) | Out-Null }
+
+# Bench token trainers: Clefairy Doll, Mysterious Fossil (identified by HP field + rules text in JSON)
+# We detect these dynamically below by inspecting card data, so no static list needed here.
+
 # ── 3. Parse Powers_And_Bodies_Effects.gd ─────────────────────────────────────
 $PowerGdText = Get-Content $PowerGd -Raw
 
 $PowerDispatchKeys = [System.Collections.Generic.HashSet[string]]::new([System.StringComparer]::OrdinalIgnoreCase)
 $PowerKeyMatches = [regex]::Matches($PowerGdText, '_power_dispatch\["([^"]+)"\]')
 foreach ($m in $PowerKeyMatches) {
-    $PowerDispatchKeys.Add($m.Groups[1].Value) | Out-Null   # preserve case for display
+    $PowerDispatchKeys.Add($m.Groups[1].Value) | Out-Null
 }
-# Also build a case-insensitive lookup set
 $PowerDispatchKeysCI = [System.Collections.Generic.HashSet[string]]::new([System.StringComparer]::OrdinalIgnoreCase)
 foreach ($k in $PowerDispatchKeys) { $PowerDispatchKeysCI.Add($k) | Out-Null }
+
+# Powers implemented as passive checks — search both Powers.gd and Main.gd for the ability name as a string.
+# If it appears there, it's handled even if not in _power_dispatch.
+function IsPowerImplementedPassively([string]$abilName) {
+    $escaped = [regex]::Escape($abilName)
+    # Look for the name as a quoted string in Powers or Main
+    if ($PowerGdText  -match ('"' + $escaped + '"')) { return $true }
+    if ($MainGdText   -match ('"' + $escaped + '"')) { return $true }
+    return $false
+}
 
 # ── 4. Parse Stadium_Ids.gd for handled stadium UIDs ─────────────────────────
 $StadiumHandledIds = [System.Collections.Generic.HashSet[string]]::new([System.StringComparer]::OrdinalIgnoreCase)
@@ -192,7 +214,7 @@ foreach ($Set in $Sets) {
 
                     $SetStats.TotalPowers++
 
-                    if ($PowerDispatchKeysCI.Contains($AbilName)) {
+                    if ($PowerDispatchKeysCI.Contains($AbilName) -or (IsPowerImplementedPassively $AbilName)) {
                         $SetStats.ImplPowers++
                     } else {
                         $SetStats.MissPowers++
@@ -216,10 +238,26 @@ foreach ($Set in $Sets) {
 
             $SetStats.TotalTrainers++
 
+            # Check if it's a bench-token trainer (Clefairy Doll, Mysterious Fossil):
+            # has HP > 0 and rules text containing "as if it were a basic"
+            $IsBenchToken = $false
+            if ($Card.PSObject.Properties["hp"] -and [int]($Card.hp) -gt 0) {
+                if ($Card.PSObject.Properties["rules"] -and $Card.rules) {
+                    foreach ($rule in $Card.rules) {
+                        if ($rule -match "as if it were a basic") { $IsBenchToken = $true; break }
+                    }
+                }
+            }
+            # Attached trainers by UID or card name
+            $CardNameLower = if ($Card.PSObject.Properties["name"]) { $Card.name.ToLower() } else { "" }
+            $IsAttached = $AttachedTrainerUids.Contains($UidLower) -or $AttachedTrainerNames.Contains($CardNameLower)
+
             if ($TrainerDispatchKeys.Contains($UidLower)) {
                 $SetStats.ImplTrainers++
             } elseif ($IsStadium -and $StadiumHandledIds.Contains($UidLower)) {
-                # Stadium handled via Stadium_Ids constant — count as implemented
+                $SetStats.ImplTrainers++
+            } elseif ($IsBenchToken -or $IsAttached) {
+                # Handled by special routing in resolve_bench_token_trainer / resolve_attached_trainer
                 $SetStats.ImplTrainers++
             } else {
                 $SetStats.MissTrainers++
