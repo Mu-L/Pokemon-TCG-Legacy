@@ -1564,16 +1564,14 @@ func cpu_phase_activate_powers() -> void:
 				var coin = await main.flip_coin(false, true)
 				gloom.power_used_this_turn = true
 				if coin:
-					main.player_active_pokemon.special_condition = "Confused"
-					main.update_status_icons(main.player_active_pokemon, false)
+					main.card_ops.apply_status(main.player_active_pokemon, "Confused", false)
 					await main.show_message("Pollen Stench: Defending Pokemon is Confused!")
 					if main._should_bail(): return
 				else:
 					# Tails: own active confused
 					var cpu_active = main.opponent_active_pokemon
 					if cpu_active != null:
-						cpu_active.special_condition = "Confused"
-						main.update_status_icons(cpu_active, true)
+						main.card_ops.apply_status(cpu_active, "Confused", true)
 						await main.show_message("Pollen Stench: Tails! Own active is Confused!")
 						if main._should_bail(): return
 	
@@ -1614,15 +1612,13 @@ func cpu_phase_activate_powers() -> void:
 				var coin = await main.flip_coin(false, true)
 				drowzee.power_used_this_turn = true
 				if coin:
-					main.player_active_pokemon.special_condition = "Asleep"
-					main.update_status_icons(main.player_active_pokemon, false)
+					main.card_ops.apply_status(main.player_active_pokemon, "Asleep", false)
 					await main.show_message("Long-Distance Hypnosis: Defending Pokemon is Asleep!")
 					if main._should_bail(): return
 				else:
 					var cpu_active = main.opponent_active_pokemon
 					if cpu_active != null:
-						cpu_active.special_condition = "Asleep"
-						main.update_status_icons(cpu_active, true)
+						main.card_ops.apply_status(cpu_active, "Asleep", true)
 						await main.show_message("Long-Distance Hypnosis: Tails! Own active is Asleep!")
 						if main._should_bail(): return
 	
@@ -2051,15 +2047,13 @@ func power_pollen_stench(pokemon: card_object) -> void:
 	if coin:
 		var defender = main.opponent_active_pokemon
 		if defender != null:
-			defender.special_condition = "Confused"
-			main.update_status_icons(defender, true)
+			main.card_ops.apply_status(defender, "Confused", true)
 			await main.show_message("HEADS! " + defender.metadata.get("name", "").to_upper() + " IS NOW CONFUSED!")
 			if main._should_bail(): return
 	else:
 		var active = main.player_active_pokemon
 		if active != null:
-			active.special_condition = "Confused"
-			main.update_status_icons(active, false)
+			main.card_ops.apply_status(active, "Confused", false)
 			await main.show_message("TAILS! " + active.metadata.get("name", "").to_upper() + " IS NOW CONFUSED!")
 			if main._should_bail(): return
 	print("POWER: Pollen Stench")
@@ -2179,15 +2173,13 @@ func power_long_distance_hypnosis(pokemon: card_object) -> void:
 	if coin:
 		var defender = main.opponent_active_pokemon
 		if defender != null:
-			defender.special_condition = "Asleep"
-			main.update_status_icons(defender, true)
+			main.card_ops.apply_status(defender, "Asleep", true)
 			await main.show_message("HEADS! " + defender.metadata.get("name", "").to_upper() + " IS NOW ASLEEP!")
 			if main._should_bail(): return
 	else:
 		var active = main.player_active_pokemon
 		if active != null:
-			active.special_condition = "Asleep"
-			main.update_status_icons(active, false)
+			main.card_ops.apply_status(active, "Asleep", false)
 			await main.show_message("TAILS! " + active.metadata.get("name", "").to_upper() + " IS NOW ASLEEP!")
 			if main._should_bail(): return
 	print("POWER: Long-Distance Hypnosis")
@@ -2366,8 +2358,7 @@ func check_pollen_defense(damaged_pokemon: card_object, attacker: card_object, i
 		if ab.get("name", "") == "Thick Skinned" and not is_toxic_gas_active():
 			await main.show_message("THICK SKINNED PREVENTS CONFUSION!")
 			return
-	attacker.special_condition = "Confused"
-	main.update_status_icons(attacker, not is_damaged_opp)
+	main.card_ops.apply_status(attacker, "Confused", not is_damaged_opp)
 	await main.show_message("POLLEN DEFENSE: " + attacker.metadata.get("name", "").to_upper() + " IS NOW CONFUSED!")
 	if main._should_bail(): return
 

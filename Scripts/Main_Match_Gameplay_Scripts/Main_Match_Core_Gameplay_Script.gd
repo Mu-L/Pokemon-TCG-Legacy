@@ -2786,7 +2786,7 @@ func perform_evolution(is_opponent: bool) -> void:
 	clear_all_statuses(target_card, is_opponent)
 
 	# GYM2-123 Viridian City Gym — when a Giovanni-named pokemon evolves, heal 20 (or 10 if only 1 counter)
-	if is_stadium_in_play("gym2-123") and "Giovanni" in evo_card.metadata.get("name", ""):
+	if is_stadium_in_play(StadiumIds.VIRIDIAN_CITY_GYM) and "Giovanni" in evo_card.metadata.get("name", ""):
 		var counters = max_hp_new - evo_card.current_hp
 		if counters > 0:
 			var heal_amount = 20 if counters >= 20 else 10
@@ -3262,7 +3262,7 @@ func calculate_final_damage(base_damage: int, attacking_types: Array, defending_
 	# Apply weakness (check temporary override from Porygon Conversion 1 first)
 	# GYM2-113 Cinnabar City Gym — Ignore Weakness when a Water Pokemon attacks a Blaine-named pokemon
 	var skip_weakness = false
-	if is_stadium_in_play("gym2-113") and attacker_pokemon != null:
+	if is_stadium_in_play(StadiumIds.CINNABAR_CITY_GYM) and attacker_pokemon != null:
 		var def_name_cinnabar = defending_pokemon.metadata.get("name", "")
 		if "Blaine" in def_name_cinnabar and "Water" in attacking_types:
 			skip_weakness = true
@@ -3287,7 +3287,7 @@ func calculate_final_damage(base_damage: int, attacking_types: Array, defending_
 	# Apply resistance (check temporary override from Porygon Conversion 2 first)
 	# GYM1-115 Pewter City Gym — Pokemon with "Brock" in name ignore Resistance on their attacks
 	var skip_resistance = false
-	if is_stadium_in_play("gym1-115") and attacker_pokemon != null:
+	if is_stadium_in_play(StadiumIds.PEWTER_CITY_GYM) and attacker_pokemon != null:
 		var atk_name_pewter = attacker_pokemon.metadata.get("name", "")
 		if "Brock" in atk_name_pewter:
 			skip_resistance = true
@@ -3295,7 +3295,7 @@ func calculate_final_damage(base_damage: int, attacking_types: Array, defending_
 	if not skip_resistance:
 		var resistances = defending_pokemon.metadata.get("resistances", [])
 		# GYM2-109 Resistance Gym — each pokemon's Resistance is reduced by 20 (e.g. -30 -> -10, -20 -> 0)
-		var resistance_reduction = 20 if is_stadium_in_play("gym2-109") else 0
+		var resistance_reduction = 20 if is_stadium_in_play(StadiumIds.RESISTANCE_GYM) else 0
 		for resistance in resistances:
 			var resistance_type = resistance["type"]
 			if defending_pokemon.temporary_resistance != "":
@@ -3900,10 +3900,10 @@ func get_retreat_cost(pokemon: card_object) -> int:
 	cost += powers_and_bodies.get_sticky_goo_cost(is_player_pokemon)
 
 	# GYM1-104 The Rocket's Training Gym — both players pay +1 Colorless to retreat their Active Pokemon
-	if is_stadium_in_play("gym1-104"):
+	if is_stadium_in_play(StadiumIds.ROCKETS_TRAINING_GYM):
 		cost += 1
 	# GYM1-108 Cerulean City Gym — Pokemon with "Misty" in name pay 1 less to retreat
-	if is_stadium_in_play("gym1-108"):
+	if is_stadium_in_play(StadiumIds.CERULEAN_CITY_GYM):
 		var pname = pokemon.metadata.get("name", "")
 		if "Misty" in pname:
 			cost = max(0, cost - 1)
@@ -3918,7 +3918,7 @@ func is_stadium_in_play(uid: String) -> bool:
 
 # Returns the bench cap. Reduced to 4 while gym1-124 Narrow Gym is in play.
 func get_max_bench_size() -> int:
-	if is_stadium_in_play("gym1-124"):
+	if is_stadium_in_play(StadiumIds.NARROW_GYM):
 		return 4
 	return 5
 
@@ -3929,7 +3929,7 @@ func get_max_bench_size() -> int:
 func maybe_vermilion_lt_surge_flip(attacker: card_object, is_opponent: bool) -> void:
 	if attacker == null:
 		return
-	if not is_stadium_in_play("gym1-120"):
+	if not is_stadium_in_play(StadiumIds.VERMILION_CITY_GYM):
 		return
 	if not ("Lt. Surge" in attacker.metadata.get("name", "")):
 		return
