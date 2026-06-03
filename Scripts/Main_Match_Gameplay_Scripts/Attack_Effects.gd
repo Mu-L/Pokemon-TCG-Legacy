@@ -225,6 +225,13 @@ func _register_base_attacks() -> void:
 # Returns false to fall through to the generic damage/text-effects path in perform_attack.
 #
 
+# Called from Main._ready() after powers_and_bodies is initialised.
+# Registers attack-effects on-damage hooks into the powers event bus so Main's
+# apply_damage can call a single dispatch_on_damage instead of individual check_ calls.
+func register_on_damage_hooks(powers: Node) -> void:
+	powers.register_on_damage_hook(func(def, atk, dmg, is_def_opp): await check_mirror_shell(def, atk, dmg, is_def_opp))
+	powers.register_on_damage_hook(func(def, atk, dmg, is_def_opp): await gym1_check_counters(def, atk, dmg, is_def_opp))
+
 func dispatch_attack(attack: Dictionary, attacker: card_object, defender: card_object, is_opponent: bool) -> bool:
 	_ensure_dispatch_ready()
 	var attack_name = attack.get("name", "")

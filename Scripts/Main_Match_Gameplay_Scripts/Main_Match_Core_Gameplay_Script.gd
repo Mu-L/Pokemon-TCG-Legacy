@@ -3058,36 +3058,9 @@ func display_and_apply_attack_damage(attacker: card_object, defender: card_objec
 	print(attacker.metadata["name"] + " dealt " + str(final_damage) + " damage to " + defender.metadata["name"] + "! HP remaining: " + str(defender.current_hp))
 	display_hp_circles_above_align(defender, !is_opponent)
 	
-	# Check for Machamp's Strikes Back power (triggers when Machamp takes damage)
 	if final_damage > 0:
 		SoundManagerScript.play_sfx(SoundManagerScript.SFX_damage_sound)
-		await powers_and_bodies.check_strikes_back(defender, attacker, !is_opponent)
-		# GYM1 Rocket's Snorlax Restless Sleep — 20 to attacker if Snorlax was Asleep
-		await powers_and_bodies.check_restless_sleep(defender, attacker, !is_opponent)
-		# GYM1 Erika's Vileplume Pollen Defense — flip to Confuse attacker
-		await powers_and_bodies.check_pollen_defense(defender, attacker, !is_opponent)
-		# GYM2 Koga's Muk Energy Drain — flip to discard 1 attacker energy
-		await powers_and_bodies.check_energy_drain(defender, attacker, !is_opponent)
-		# GYM2 Lt. Surge's Electrode Shock Blast — flip tails, 20 to both actives
-		await powers_and_bodies.check_shock_blast(defender, !is_opponent)
-		# GYM2 Brock's Primeape Scram — at exactly 10 HP, shuffle into deck
-		await powers_and_bodies.check_scram(defender, !is_opponent)
-		# GYM1 Misty's Tentacruel Flee — owner may switch out to prevent further attack effects
-		await powers_and_bodies.check_flee(defender, !is_opponent)
-		# Check for Dark Wartortle's Mirror Shell (counter equal damage)
-		await attack_effects.check_mirror_shell(defender, attacker, final_damage, !is_opponent)
-		# Check for GYM1 Crosscounter / Fire Wall counter-attacks
-		await attack_effects.gym1_check_counters(defender, attacker, final_damage, !is_opponent)
-		# GYM2 Koga (gym2-19/106): a Koga-named attacker that damaged the defender this turn poisons them
-		if attacker != null:
-			var attacker_owner_is_opp = (attacker == opponent_active_pokemon)
-			var koga_on = (opponent_koga_poison_active if attacker_owner_is_opp else player_koga_poison_active)
-			var attacker_name = attacker.metadata.get("name", "")
-			if koga_on and "Koga" in attacker_name and not defender.is_poisoned and defender.special_condition != "Asleep":
-				defender.is_poisoned = true
-				defender.poison_damage = 10
-				update_status_icons(defender, !is_opponent)
-				print("GYM2 KOGA: Poisoned ", defender.metadata.get("name", ""))
+		await powers_and_bodies.dispatch_on_damage(defender, attacker, final_damage, !is_opponent)
 
 	# GYM1-120 Vermilion City Gym: queued self-damage from Lt. Surge tails — apply to attacker after damage resolves
 	if vermilion_lt_surge_self_damage_pending > 0 and attacker != null:
@@ -3425,14 +3398,9 @@ func check_and_handle_knockout(pokemon: card_object, is_opponent: bool) -> bool:
 	SoundManagerScript.play_sfx(SoundManagerScript.SFX_knockout_sound)
 	await show_message(ko_name.to_upper() + " WAS KNOCKED OUT!")
 
-	# BASE5: Dark Gyarados Final Beam - triggers when KO'd by attack
-	var ko_abilities = pokemon.metadata.get("abilities", [])
-	for ab in ko_abilities:
-		if ab.get("name", "") == "Final Beam":
-			# Find the attacker (the other side's active)
-			var attacker = player_active_pokemon if is_opponent else opponent_active_pokemon
-			await powers_and_bodies.check_final_beam(pokemon, attacker, is_opponent)
-			break
+	# Pre-KO event hooks (Final Beam and any future on-KO powers registered in Powers)
+	var ko_attacker = player_active_pokemon if is_opponent else opponent_active_pokemon
+	await powers_and_bodies.dispatch_pre_ko(pokemon, ko_attacker, is_opponent)
 
 	# GYM1 Rocket's Moltres Rebirth — return to hand instead of discarding
 	# Must trigger AFTER Final Beam (so Final Beam still resolves) but BEFORE the discard animation.
@@ -4772,7 +4740,11 @@ func _ready() -> void:
 	card_ops.set_script(preload("res://Scripts/Main_Match_Gameplay_Scripts/Card_Ops.gd"))
 	add_child(card_ops)
 	card_ops.main = self
-	
+
+	# Register all on-damage and pre-KO power hooks, then let attack_effects add its own.
+	powers_and_bodies._register_all_power_hooks()
+	attack_effects.register_on_damage_hooks(powers_and_bodies)
+
 	var opponent_name = GameState.current_opponent_name
 	
 	if GameDataManager.player_data.has("coin"):
