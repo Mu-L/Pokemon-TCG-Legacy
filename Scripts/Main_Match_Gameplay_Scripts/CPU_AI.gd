@@ -1936,12 +1936,6 @@ func score_parsed_effects(effects: Array, defender: card_object) -> float:
 				score += 10.0 * flip_mult
 
 
-		if effect["type"] == "damage_reduction_self":
-			score += 15.0 * flip_mult
-
-		if effect["type"] == "prevent_attack":
-			score += 50.0 * flip_mult
-
 		if effect["type"] == "self_switch":
 			# Value depends on board state — retreat to safety if low HP
 			if main.opponent_active_pokemon != null:

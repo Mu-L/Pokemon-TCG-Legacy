@@ -3109,9 +3109,6 @@ func perform_attack(attack_index: int) -> void:
 	# GYM1-120 Vermilion City Gym pre-attack flip (player). Optional flip for Lt. Surge attacker.
 	await maybe_vermilion_lt_surge_flip(player_active_pokemon, false)
 
-	# Handle special attacks that have completely unique flows
-	var text_lower = attack.get("text", "").to_lower()
-
 	# GYM2 pre-processing: attack-dict modifications before dispatch
 	if player_active_pokemon.uid.begins_with("gym2-"):
 		# Koga's Ditto Giant Growth boosts Pound's base damage to 30
@@ -4132,6 +4129,7 @@ func handle_action_retreat_bench() -> void:
 		hide_selection_mode_display_main()
 		display_hp_circles_above_align(player_active_pokemon, false)
 		await check_all_knockouts()
+		if _should_bail(): return
 		display_pokemon(false)
 		return
 
@@ -4172,7 +4170,9 @@ func handle_action_retreat_bench() -> void:
 	
 	# Sinkhole (Dark Dugtrio): damage to retreating Pokemon
 	await powers_and_bodies.check_sinkhole(retreating_pokemon, false)
+	if _should_bail(): return
 	await check_all_knockouts()
+	if _should_bail(): return
 
 # Moves a bench pokemon to the active slot after a knockout and triggers post-knockout signals
 func handle_action_knockout_bench() -> void:
@@ -4608,20 +4608,7 @@ func this_card_clicked(clicked_card: card_object) -> void:
 			action_button.disabled = false
 			action_button.theme = theme_green
 			return
-		
-		# TRAINER DISCARD SELECTION MODE
-		elif trainer_discard_selection_active:
-			select_card_in_ui(clicked_card)
-			if clicked_card in trainer_discard_selected:
-				action_button.text = "CONFIRM"
-				action_button.disabled = false
-				action_button.theme = theme_green
-			else:
-				action_button.text = "SELECT"
-				action_button.disabled = false
-				action_button.theme = theme_green
-			return
-		
+
 		# Normal card selection mode (not in attach mode)
 		select_card_in_ui(clicked_card)
 		

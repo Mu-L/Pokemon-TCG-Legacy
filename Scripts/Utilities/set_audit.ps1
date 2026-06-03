@@ -125,11 +125,18 @@ $GenericPatterns = @(
     "\basleep\b",
     "\bconfused\b",
     "\bparalyzed\b",
-    "\bpoisoned\b"
+    "\bpoisoned\b",
+    "this attack does",
+    "damage to each",
+    "damage counter"
 )
 
 function IsLikelyGeneric([string]$text) {
-    $tl = $text.ToLower()
+    # No text at all = pure damage attack, handled by base damage path
+    if ([string]::IsNullOrWhiteSpace($text)) { return $true }
+    $tl = $text.ToLower().Trim()
+    # Very short text = typically just damage flavour, handled generically
+    if ($tl.Length -lt 15) { return $true }
     foreach ($pat in $GenericPatterns) {
         if ($tl -match $pat) { return $true }
     }

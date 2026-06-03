@@ -2171,13 +2171,10 @@ func execute_mega_drain(attacker: card_object, defender: card_object, is_opponen
 	# Heal attacker for half of actual damage dealt (rounded up to nearest 10)
 	var actual_damage = min(final_damage, defender.current_hp + final_damage)  # damage before KO check
 	var heal_amount = int(ceil(actual_damage / 2.0 / 10.0)) * 10
-	var max_hp = int(attacker.metadata.get("hp", "0"))
-	var healed = min(heal_amount, max_hp - attacker.current_hp)
-	if healed > 0:
-		attacker.current_hp = min(max_hp, attacker.current_hp + healed)
-		SoundManagerScript.play_sfx(SoundManagerScript.SFX_heal_sound)
-		main.display_hp_circles_above_align(attacker, is_opponent)
-		await main.show_message(attacker.metadata.get("name", "").to_upper() + " HEALED " + str(healed) + " HP!")
+	if heal_amount > 0:
+		await main.card_ops.heal_pokemon(attacker, heal_amount, is_opponent)
+		if main._should_bail(): return
+		await main.show_message(attacker.metadata.get("name", "").to_upper() + " HEALED " + str(heal_amount) + " HP!")
 		if main._should_bail(): return
 
 # LEECH LIFE: Deal damage, heal equal to damage dealt after W/R
@@ -2201,13 +2198,11 @@ func execute_leech_life(attacker: card_object, defender: card_object, is_opponen
 	if main._should_bail(): return
 	
 	# Heal attacker equal to final damage dealt
-	var max_hp = int(attacker.metadata.get("hp", "0"))
-	var healed = min(final_damage, max_hp - attacker.current_hp)
-	if healed > 0:
-		attacker.current_hp = min(max_hp, attacker.current_hp + healed)
-		SoundManagerScript.play_sfx(SoundManagerScript.SFX_heal_sound)
-		main.display_hp_circles_above_align(attacker, is_opponent)
-		await main.show_message(attacker.metadata.get("name", "").to_upper() + " DRAINED " + str(healed) + " HP!")
+	if final_damage > 0:
+		await main.card_ops.heal_pokemon(attacker, final_damage, is_opponent)
+		if main._should_bail(): return
+		var healed = min(final_damage, int(attacker.metadata.get("hp", "0")) - attacker.current_hp + final_damage)
+		await main.show_message(attacker.metadata.get("name", "").to_upper() + " DRAINED " + str(final_damage) + " HP!")
 		if main._should_bail(): return
 
 # CALL FOR FAMILY/FRIEND: Search deck for specific basic pokemon
@@ -2707,9 +2702,8 @@ func execute_spacing_out(attacker: card_object, is_opponent: bool) -> void:
 	
 	var coin = await main.flip_coin(false, is_opponent)
 	if coin:
-		attacker.current_hp = min(max_hp, attacker.current_hp + 10)
-		SoundManagerScript.play_sfx(SoundManagerScript.SFX_heal_sound)
-		main.display_hp_circles_above_align(attacker, is_opponent)
+		await main.card_ops.heal_pokemon(attacker, 10, is_opponent)
+		if main._should_bail(): return
 		await main.show_message("SPACING OUT: HEALED 10 HP!")
 		if main._should_bail(): return
 	else:
@@ -2989,10 +2983,9 @@ func execute_bench_manipulation(attacker: card_object, defender: card_object, is
 		defender.current_hp = max(0, defender.current_hp - total_damage)
 		main.display_hp_circles_above_align(defender, !is_opponent)
 		main.show_floating_label("-" + str(total_damage) + "HP", Vector2(530 if is_opponent else 1030, 300), Color.WHITE)
-		if total_damage > 0:
-			SoundManagerScript.play_sfx(SoundManagerScript.SFX_damage_sound)
-			await main.powers_and_bodies.check_strikes_back(defender, attacker, !is_opponent)
-			if main._should_bail(): return
+		SoundManagerScript.play_sfx(SoundManagerScript.SFX_damage_sound)
+		await main.powers_and_bodies.dispatch_on_damage(defender, attacker, total_damage, !is_opponent)
+		if main._should_bail(): return
 	
 	if is_opponent:
 		main.last_attack_on_player = {"damage": total_damage, "attack": {}, "attacker_types": attacker.metadata.get("types", ["Colorless"])}
@@ -3339,6 +3332,24 @@ func execute_third_eye(attacker: card_object, is_opponent: bool) -> void:
 	print("ATTACK EXECUTED: Third Eye - drew ", draw_count, " cards")
 
 # Dark Machoke - Drag Off: Switch bench->active before damage, then 20 damage
+# Swap a bench pokemon from the TARGET side (opposite of attacker) into the active slot.
+# Clears statuses on the demoted active and refreshes display for that side.
+func _force_bench_to_active(selected: card_object, attacker_is_opp: bool) -> void:
+	var target_is_opp = not attacker_is_opp
+	var old_active = main.opponent_active_pokemon if target_is_opp else main.player_active_pokemon
+	var bench    = main.opponent_bench if target_is_opp else main.player_bench
+	bench.erase(selected)
+	bench.append(old_active)
+	old_active.current_location = "bench"
+	selected.current_location   = "active"
+	if target_is_opp:
+		main.opponent_active_pokemon = selected
+	else:
+		main.player_active_pokemon = selected
+	main.clear_all_statuses(old_active, target_is_opp)
+	main.display_pokemon(target_is_opp)
+	main.display_active_pokemon_energies(target_is_opp)
+
 func execute_drag_off(attacker: card_object, defender: card_object, is_opponent: bool) -> void:
 	var target_bench = main.player_bench if is_opponent else main.opponent_bench
 	
@@ -3361,28 +3372,7 @@ func execute_drag_off(attacker: card_object, defender: card_object, is_opponent:
 	if selected == null:
 		return
 
-	# Switch the selected bench with active
-	var old_active: card_object
-	if is_opponent:
-		old_active = main.player_active_pokemon
-		main.player_bench.erase(selected)
-		main.player_bench.append(old_active)
-		old_active.current_location = "bench"
-		selected.current_location = "active"
-		main.player_active_pokemon = selected
-		main.clear_all_statuses(old_active, false)
-	else:
-		old_active = main.opponent_active_pokemon
-		main.opponent_bench.erase(selected)
-		main.opponent_bench.append(old_active)
-		old_active.current_location = "bench"
-		selected.current_location = "active"
-		main.opponent_active_pokemon = selected
-		main.clear_all_statuses(old_active, true)
-	
-	main.display_pokemon(!is_opponent)
-	main.display_active_pokemon_energies(!is_opponent)
-	
+	_force_bench_to_active(selected, is_opponent)
 	await main.show_message("DRAGGED " + selected.metadata.get("name", "").to_upper() + " TO ACTIVE!")
 	if main._should_bail(): return
 	
@@ -3439,27 +3429,7 @@ func execute_fascinate(attacker: card_object, defender: card_object, is_opponent
 	if selected == null:
 		return
 
-	# Switch
-	var old_active: card_object
-	if is_opponent:
-		old_active = main.player_active_pokemon
-		main.player_bench.erase(selected)
-		main.player_bench.append(old_active)
-		old_active.current_location = "bench"
-		selected.current_location = "active"
-		main.player_active_pokemon = selected
-		main.clear_all_statuses(old_active, false)
-	else:
-		old_active = main.opponent_active_pokemon
-		main.opponent_bench.erase(selected)
-		main.opponent_bench.append(old_active)
-		old_active.current_location = "bench"
-		selected.current_location = "active"
-		main.opponent_active_pokemon = selected
-		main.clear_all_statuses(old_active, true)
-	
-	main.display_pokemon(!is_opponent)
-	main.display_active_pokemon_energies(!is_opponent)
+	_force_bench_to_active(selected, is_opponent)
 	await main.show_message(selected.metadata.get("name", "").to_upper() + " WAS SWITCHED IN!")
 	if main._should_bail(): return
 	print("ATTACK EXECUTED: Fascinate - switched in ", selected.metadata.get("name", ""))
