@@ -18,7 +18,7 @@ $StadiumGd      = Join-Path $Root "Scripts\Main_Match_Gameplay_Scripts\Stadium_I
 $SpreadsheetDir = Join-Path $Root "Spreadsheets"
 $OutputFile     = Join-Path $SpreadsheetDir "Set_Audit_Report.txt"
 
-$Sets = @("base1","base2","base3","base5","gym1","gym2")
+$Sets = @("base1","base2","base3","base5","gym1","gym2","si1")
 
 # ── Ensure output directory ────────────────────────────────────────────────────
 if (-not (Test-Path $SpreadsheetDir)) {

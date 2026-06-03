@@ -1,6 +1,6 @@
 Pokemon TCG Legacy — Set Audit Report
-Generated: 2026-06-03 11:09:11
-Sets audited: base1, base2, base3, base5, gym1, gym2
+Generated: 2026-06-03 12:50:36
+Sets audited: base1, base2, base3, base5, gym1, gym2, si1
 
 ====================================================================================================
 SUMMARY TABLE
@@ -8,13 +8,14 @@ SUMMARY TABLE
 Set        Atk Tot Atk Impl  Atk ?Gen Atk Miss     Trn Tot Trn Impl Trn Miss     Pwr Tot Pwr Impl Pwr Miss
 ----------------------------------------------------------------------------------------------------
 base1          114        6       108        0          26       26        0           6        6        0
-base2           85       13        72        0           1        1        0           6        6        0
+base2           85       14        71        0           1        1        0           6        6        0
 base3           69       12        57        0           5        5        0          10       10        0
 base5           88       27        61        0           9        9        0          14       14        0
 gym1           153       47       106        0          35       35        0          11       11        0
 gym2           163       67        96        0          31       31        0          13       13        0
+si1             31       11        20        0           0        0        0           0        0        0
 ----------------------------------------------------------------------------------------------------
-TOTAL          672      172       500        0         107      107        0          60       60        0
+TOTAL          703      184       519        0         107      107        0          60       60        0
 ====================================================================================================
 
 LEGEND:
@@ -191,7 +192,6 @@ MISSING ITEMS DETAIL
   [ATTACK ? generic] Seaking (base2-46) — "Horn Attack"
   [ATTACK ? generic] Seaking (base2-46) — "Waterfall"
   [ATTACK ? generic] Tauros (base2-47) — "Stomp"
-  [ATTACK ? generic] Tauros (base2-47) — "Rampage"
   [ATTACK ? generic] Weepinbell (base2-48) — "Poisonpowder"
   [ATTACK ? generic] Weepinbell (base2-48) — "Razor Leaf"
   [ATTACK ? generic] Bellsprout (base2-49) — "Vine Whip"
@@ -544,11 +544,33 @@ MISSING ITEMS DETAIL
   [ATTACK ? generic] Sabrina's Porygon (gym2-98) — "Barrier Attack"
   [ATTACK ? generic] Sabrina's Psyduck (gym2-99) — "Scratch"
 
+=== SI1 missing items ===
+  [ATTACK ? generic] Pidgeot (si1-2) — "Supersonic Flight"
+  [ATTACK ? generic] Pidgeot (si1-2) — "Slicing Wind"
+  [ATTACK ? generic] Onix (si1-3) — "Slam"
+  [ATTACK ? generic] Onix (si1-3) — "Body Slam"
+  [ATTACK ? generic] Togepi (si1-4) — "Bawl"
+  [ATTACK ? generic] Ivysaur (si1-5) — "Razor Leaf"
+  [ATTACK ? generic] Raticate (si1-6) — "Sharp Teeth"
+  [ATTACK ? generic] Ledyba (si1-7) — "Gnaw"
+  [ATTACK ? generic] Ledyba (si1-7) — "Agility"
+  [ATTACK ? generic] Jigglypuff (si1-8) — "Tempting Eyes"
+  [ATTACK ? generic] Jigglypuff (si1-8) — "Sing"
+  [ATTACK ? generic] Butterfree (si1-9) — "Fly"
+  [ATTACK ? generic] Butterfree (si1-9) — "Rainbow Powder"
+  [ATTACK ? generic] Tentacruel (si1-10) — "Poison Sting"
+  [ATTACK ? generic] Marill (si1-11) — "Rolling Tackle"
+  [ATTACK ? generic] Lapras (si1-12) — "Ice Beam"
+  [ATTACK ? generic] Slowking (si1-14) — "Psychic"
+  [ATTACK ? generic] Wartortle (si1-15) — "Water Gun"
+  [ATTACK ? generic] Vileplume (si1-17) — "Horrid Pollen"
+  [ATTACK ? generic] Primeape (si1-18) — "Low Kick"
+
 ====================================================================================================
 DISPATCH REGISTRY SIZES (for reference)
 ====================================================================================================
-  _attack_dispatch keys   : 150
-  execute_ func names     : 142
+  _attack_dispatch keys   : 161
+  execute_ func names     : 153
   _trainer_dispatch keys  : 87
   Stadium_Ids constants   : 14
   _power_dispatch keys    : 28
