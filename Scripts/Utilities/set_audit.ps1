@@ -120,6 +120,7 @@ function NormalizeToFuncName([string]$name) {
 # ── 6. Helper: does attack text look generic enough to probably work? ─────────
 $GenericPatterns = @(
     "flip a coin",
+    "flips a coin",
     "does \d+ damage",
     "remove \d+ damage counter",
     "\basleep\b",
@@ -128,7 +129,20 @@ $GenericPatterns = @(
     "\bpoisoned\b",
     "this attack does",
     "damage to each",
-    "damage counter"
+    "damage counter",
+    # Text parser handles these automatically:
+    "discard.*energy.*attached to",    # energy_discard_self
+    "choose 1 of them and discard it", # energy_discard_defender (Hyper Beam, Whirlpool)
+    "switches it with.*bench",         # force_switch (Whirlwind, Lure)
+    "switch it with.*bench",           # force_switch
+    "switch it with his or her active",# force_switch (Lure)
+    "or less damage is done to",       # shielded_damage (Harden)
+    "damage done.*reduced by",         # damage_reduction (Minimize, Pounce)
+    "can't retreat.*defending",        # retreat_lock (Clutch, Spook)
+    "can't play trainer",              # trainer_lock (Headache)
+    "knocks out.*knock out that",      # destiny_bond
+    "prevent all effects",             # invincible (Barrier)
+    "tries to attack.*does nothing"    # flip_attack_block (Sand-attack, Smokescreen)
 )
 
 function IsLikelyGeneric([string]$text) {

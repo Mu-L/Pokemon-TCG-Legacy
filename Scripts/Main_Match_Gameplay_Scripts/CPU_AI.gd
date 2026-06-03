@@ -2391,7 +2391,18 @@ func cpu_phase_attack(cpu_eval: Dictionary) -> void:
 			# Benching broke the effect
 			main.opponent_active_pokemon.attack_blocked_next_turn = false
 			main.opponent_active_pokemon.attack_blocked_by_id = -1
-	
+
+	# Coin-flip attack block (Sand-attack / Smokescreen): flip — tails = CPU can't attack
+	if main.opponent_active_pokemon.attack_flip_blocked:
+		main.opponent_active_pokemon.attack_flip_blocked = false
+		var flip = await main.flip_coin(false, true)
+		if not flip:
+			await main.show_message("Opponent's " + main.opponent_active_pokemon.metadata.get("name", "").to_upper() + " CAN'T ATTACK! (SAND-ATTACK)")
+			if main._should_bail(): return
+			return
+		await main.show_message("Heads! Opponent's " + main.opponent_active_pokemon.metadata.get("name", "").to_upper() + " CAN ATTACK!")
+		if main._should_bail(): return
+
 	# Swords Dance: boost Slash damage
 	if main.opponent_active_pokemon.swords_dance_active and chosen_name.to_lower() == "slash":
 		chosen_attack = chosen_attack.duplicate()

@@ -2660,6 +2660,12 @@ func clear_jungle_defensive_statuses(pokemon: card_object, is_opponent: bool) ->
 		pokemon.attack_blocked_next_turn = false
 		pokemon.attack_blocked_by_id = -1
 		print("EXPIRED: ", pokemon.metadata.get("name", ""), " attack block wore off")
+	if pokemon.attack_flip_blocked:
+		pokemon.attack_flip_blocked = false
+		print("EXPIRED: ", pokemon.metadata.get("name", ""), " coin-flip attack block wore off")
+	if pokemon.gym2_mega_burn_locked:
+		pokemon.gym2_mega_burn_locked = false
+		print("EXPIRED: ", pokemon.metadata.get("name", ""), " Mega Burn lock wore off")
 	# GYM1: Crosscounter / Fire Wall counter-attacks and Deflector halving wear off after the opponent's turn
 	if pokemon.counter_attack_double:
 		pokemon.counter_attack_double = false
@@ -3142,7 +3148,20 @@ func perform_attack(attack_index: int) -> void:
 			# Benching broke the effect
 			player_active_pokemon.attack_blocked_next_turn = false
 			player_active_pokemon.attack_blocked_by_id = -1
-	
+
+	# Coin-flip attack block (Sand-attack / Smokescreen): flip — tails = attack fails this turn
+	if player_active_pokemon.attack_flip_blocked:
+		player_active_pokemon.attack_flip_blocked = false
+		var coin = await flip_coin(false, false)
+		if not coin:
+			await show_message(player_active_pokemon.metadata["name"].to_upper() + " CAN'T ATTACK! (SAND-ATTACK / SMOKESCREEN)")
+			hide_attack_buttons()
+			await get_tree().create_timer(0.5).timeout
+			player_end_turn_checks()
+			return
+		await show_message("HEADS! " + player_active_pokemon.metadata["name"].to_upper() + " CAN ATTACK!")
+		if _should_bail(): return
+
 	# Swords Dance: If active, boost Slash base damage
 	if player_active_pokemon.swords_dance_active and attack_name.to_lower() == "slash":
 		attack = attack.duplicate()
