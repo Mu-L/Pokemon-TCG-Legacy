@@ -154,6 +154,17 @@ function IsLikelyGeneric([string]$text) {
     foreach ($pat in $GenericPatterns) {
         if ($tl -match $pat) { return $true }
     }
+    # Multi-keyword checks (order-independent, mirrors the GDScript text parser)
+    if (($tl -match "switches it with" -or $tl -match "switch it with") -and ($tl -match "bench")) { return $true }  # force_switch
+    if ($tl -match "switch" -and $tl -match "with 1 of your benched") { return $true }  # self_switch (Teleport)
+    if ($tl -match "can't retreat" -and $tl -match "defending") { return $true }  # retreat_lock
+    if ($tl -match "or less damage is done to" -and $tl -match "prevent that damage") { return $true }  # shielded_damage
+    if ($tl -match "damage done" -and $tl -match "reduced by") { return $true }  # damage_reduction
+    if ($tl -match "can't play trainer" -and $tl -match "next turn") { return $true }  # trainer_lock
+    if ($tl -match "knocks out" -and $tl -match "knock out that") { return $true }  # destiny_bond
+    if ($tl -match "prevent all effects" -and $tl -match "attacks") { return $true }  # invincible (Barrier)
+    if ($tl -match "tries to attack" -and $tl -match "does nothing") { return $true }  # flip_attack_block
+    if ($tl -match "discard" -and $tl -match "energy" -and $tl -match "attached to") { return $true }  # energy_discard
     return $false
 }
 

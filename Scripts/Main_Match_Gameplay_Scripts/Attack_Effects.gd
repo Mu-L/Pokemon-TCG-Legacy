@@ -215,6 +215,8 @@ func _register_base_attacks() -> void:
 		else:                   await execute_call_for_pokemon(a, opp, [], "Fighting")
 		await _attack_finish(false, 0, atk, a.metadata.get("types",["Colorless"]), opp)
 
+	# Earthdrill: pre-registry special case handles the lock; damage is generic path. Entry here only for audit visibility.
+	_attack_dispatch["earthdrill"] = func(_atk, _a, _d, _opp): pass  # always intercepted above; never reached
 	# ── Newly-implemented effects (base1–base5, gym1, gym2) ────────────────────
 	# Super Fang: half HP damage (Raticate, Lt. Surge's Raticate)
 	_attack_dispatch["super fang"]   = func(atk, a, d, opp): await execute_super_fang(a, d, opp);          await _attack_finish(true,  0,   atk, a.metadata.get("types",["Colorless"]), opp)
@@ -276,13 +278,15 @@ func dispatch_attack(attack: Dictionary, attacker: card_object, defender: card_o
 		return true
 
 	# Earthdrill: only valid after Lie Low; otherwise cancel and return true (attack fails)
+	# When Lie Low IS active, return false → falls through to generic 60-damage path (no text effects needed)
 	if an == "earthdrill":
 		if attacker.gym2_lie_low_counter < 1:
 			if not is_opponent:
 				await main.show_message("EARTHDRILL CAN'T BE USED — LIE LOW WASN'T USED LAST TURN!")
 			await _attack_finish(false, 0, attack, types, is_opponent)
 			return true
-		# Lie Low was active — fall through to the standard 60-damage path
+		attacker.gym2_lie_low_counter = 0
+		# Lie Low was active — fall through to the generic 60-damage path
 		return false
 
 	# ============================= Registry dispatch (GYM2 + future sets) ================================
