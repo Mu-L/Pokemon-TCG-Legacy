@@ -1446,7 +1446,7 @@
             "repeat": "I can barely stay awake... zzz..."
           },
           "message_colour": "orange",
-          "sprite": "NPC 15"
+          "sprite": "NPC13"
         },
         {
           "days": "2",
@@ -1456,7 +1456,7 @@
             "repeat": "zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz."
           },
           "message_colour": "orange",
-          "sprite": "NPC 15"
+          "sprite": "NPC13"
         },
         {
           "days": "2",
@@ -1469,11 +1469,11 @@
           "gift_type": "coin",
           "gift_value": "REPLACECOIN",
           "message_colour": "orange",
-          "sprite": "NPC 15"
+          "sprite": "NPC13"
         }
       ],
       "message_colour": "lilac",
-      "sprite": "NPC 07"
+      "sprite": "NPC07"
     },
     "Sunbathing Sailor 1": {
       "at": [-79, 2405],
@@ -2768,7 +2768,7 @@
       ],
       "music": "TEST",
       "prize_cards": 2,
-      "sprite": "Aromalady"
+      "sprite": "AromaLady"
     },
     "Test Double Poison": {
       "at": [-419, 2479],
@@ -2793,7 +2793,7 @@
       ],
       "music": "TEST",
       "prize_cards": 2,
-      "sprite": "Ninjaboy"
+      "sprite": "NinjaBoy"
     },
     "Test Double Prizes": {
       "at": [-239, 2339],
@@ -2817,7 +2817,7 @@
       ],
       "music": "TEST",
       "prize_cards": 4,
-      "sprite": "Richboy"
+      "sprite": "RichBoy"
     },
     "Test Draw Two": {
       "at": [1, 2269],
@@ -2842,7 +2842,7 @@
       ],
       "music": "TEST",
       "prize_cards": 2,
-      "sprite": "Artist"
+      "sprite": "Artist_M"
     },
     "Test End Of Turn Heal": {
       "at": [61, 2339],
@@ -2939,7 +2939,7 @@
       ],
       "music": "TEST",
       "prize_cards": 2,
-      "sprite": "Twin1"
+      "sprite": "Twin"
     },
     "Test Evolved Bonus": {
       "at": [-119, 2269],
@@ -2990,7 +2990,7 @@
       ],
       "music": "TEST",
       "prize_cards": 2,
-      "sprite": "Firebreather"
+      "sprite": "FireBreather"
     },
     "Test Free Retreat": {
       "at": [-179, 2479],
@@ -3040,7 +3040,7 @@
       ],
       "music": "TEST",
       "prize_cards": 2,
-      "sprite": "Bugcatcher"
+      "sprite": "BugCatcher"
     },
     "Test Heavy Retreat": {
       "at": [-239, 2479],
@@ -3187,7 +3187,7 @@
       ],
       "music": "TEST",
       "prize_cards": 2,
-      "sprite": "Battlegirl"
+      "sprite": "BattleGirl"
     },
     "Test No Healing": {
       "at": [-419, 2339],
@@ -3211,7 +3211,7 @@
       ],
       "music": "TEST",
       "prize_cards": 2,
-      "sprite": "Doctor"
+      "sprite": "Doctor_M"
     },
     "Test No Retreat": {
       "at": [-179, 2269],
@@ -3307,7 +3307,7 @@
       ],
       "music": "TEST",
       "prize_cards": 2,
-      "sprite": "Guitarist"
+      "sprite": "Guitarist_M"
     },
     "Test Raw Damage Only": {
       "at": [-119, 2339],
@@ -3331,7 +3331,7 @@
       ],
       "music": "TEST",
       "prize_cards": 2,
-      "sprite": "Blackbelt"
+      "sprite": "BlackBelt"
     },
     "Test Sleeve": {
       "at": [-59, 2479],
@@ -3452,7 +3452,7 @@
       ],
       "music": "TEST",
       "prize_cards": 2,
-      "sprite": "Guitarist2"
+      "sprite": "Guitarist_M2"
     },
     "Test Zero Damage": {
       "at": [61, 2269],

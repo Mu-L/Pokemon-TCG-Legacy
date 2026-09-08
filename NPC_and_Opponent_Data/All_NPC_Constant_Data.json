@@ -1,12 +1,12 @@
 {
   "npcs": {
 	"2nd Woman Drinking Juice": {
-	  "sprite": "NPC 32",
+	  "sprite": "NPC27",
 	  "friendly_name": "Juice Drinker",
 	  "message_colour": "yellow"
 	},
 	"3rd Woman Drinking Juice": {
-	  "sprite": "NPC 26",
+	  "sprite": "NPC21",
 	  "friendly_name": "Juice Drinker",
 	  "message_colour": "lime"
 	},
@@ -121,12 +121,12 @@
 	  "message_colour": "dark_pink"
 	},
 	"Child": {
-	  "sprite": "NPC 14_1",
+	  "sprite": "NPC12_1",
 	  "friendly_name": "Child",
 	  "message_colour": "light_pink"
 	},
 	"Child At Bakery": {
-	  "sprite": "NPC 02",
+	  "sprite": "NPC02",
 	  "friendly_name": "Child",
 	  "message_colour": "light_blue"
 	},
@@ -138,7 +138,7 @@
 	  "message_colour": "yellow"
 	},
 	"Employee F Drinking Juice": {
-	  "sprite": "NPC 01_1",
+	  "sprite": "NPC01_1",
 	  "friendly_name": "SS Anne Employee",
 	  "message_colour": "dark_pink"
 	},
@@ -150,22 +150,22 @@
 	  "message_colour": "green"
 	},
 	"Firebreather Darryl": {
-	  "sprite": "Firebreather",
+	  "sprite": "FireBreather",
 	  "friendly_name": "Firebreather Darryl",
 	  "message_colour": "dark_red"
 	},
 	"Firebreather Kenneth": {
-	  "sprite": "Firebreather",
+	  "sprite": "FireBreather",
 	  "friendly_name": "Firebreather Kenneth",
 	  "message_colour": "dark_red"
 	},
 	"Fisherman 2 Drinking Juice": {
-	  "sprite": "Fisherman2",
+	  "sprite": "Fisher_M2",
 	  "friendly_name": "Fisherman John",
 	  "message_colour": "dark_blue"
 	},
 	"Fisherman Drinking Juice": {
-	  "sprite": "Fisherman",
+	  "sprite": "Fisher_M",
 	  "friendly_name": "Fisherman Dave",
 	  "message_colour": "dark_blue"
 	},
@@ -315,12 +315,12 @@
 	},
 	"Juicebar Woman": {
 	  "npc_type": "juice_vendor",
-	  "sprite": "Youngcouple_2",
+	  "sprite": "YoungCouple_2",
 	  "friendly_name": "Juice Bar Vendor",
 	  "message_colour": "orange"
 	},
 	"Kid Opening Packs": {
-	  "sprite": "NPC 02",
+	  "sprite": "NPC02",
 	  "friendly_name": "Young Collector",
 	  "message_colour": "light_blue"
 	},
@@ -359,7 +359,7 @@
 	  "message_colour": "green"
 	},
 	"Man Staring Out To Sea": {
-	  "sprite": "Youngcouple2",
+	  "sprite": "YoungCouple2",
 	  "friendly_name": "Local Man",
 	  "message_colour": "dark_blue"
 	},
@@ -371,27 +371,27 @@
 	  "message_colour": "light_blue"
 	},
 	"Mother": {
-	  "sprite": "NPC 14",
+	  "sprite": "NPC12",
 	  "friendly_name": "Mother",
 	  "message_colour": "light_pink"
 	},
 	"Mother 2": {
-	  "sprite": "NPC 29",
+	  "sprite": "NPC24",
 	  "friendly_name": "Mother",
 	  "message_colour": "light_red"
 	},
 	"Mother At Bakery": {
-	  "sprite": "NPC 04",
+	  "sprite": "NPC04",
 	  "friendly_name": "Mother",
 	  "message_colour": "light_red"
 	},
 	"Mother Of Beach Kids": {
-	  "sprite": "NPC 14",
+	  "sprite": "NPC12",
 	  "friendly_name": "Mother",
 	  "message_colour": "light_pink"
 	},
 	"Mother Of Twins": {
-	  "sprite": "NPC 88",
+	  "sprite": "NPC33",
 	  "friendly_name": "Mother",
 	  "message_colour": "grey"
 	},
@@ -406,89 +406,89 @@
 	  "message_colour": "lilac"
 	},
 	"Pikachu Fan Cami": {
-	  "sprite": "Pokekid",
+	  "sprite": "PokeKid",
 	  "friendly_name": "Pikachu Fan Cami",
 	  "message_colour": "yellow"
 	},
 	"Pikachu Fan Juniper": {
-	  "sprite": "Pokekid",
+	  "sprite": "PokeKid",
 	  "friendly_name": "Pikachu Fan Juniper",
 	  "message_colour": "yellow"
 	},
 	"Pikachu Fan Leaf": {
-	  "sprite": "Pokekid",
+	  "sprite": "PokeKid",
 	  "friendly_name": "Pikachu Fan Leaf",
 	  "message_colour": "yellow"
 	},
 	"Pikachu Fan Marina": {
-	  "sprite": "Pokekid",
+	  "sprite": "PokeKid",
 	  "friendly_name": "Pikachu Fan Marina",
 	  "message_colour": "yellow"
 	},
 	"Pikachu Fan Raye": {
-	  "sprite": "Pokekid",
+	  "sprite": "PokeKid",
 	  "friendly_name": "Pikachu Fan Raye",
 	  "message_colour": "yellow"
 	},
 	"Pikachu Fan Skye": {
-	  "sprite": "Pokekid",
+	  "sprite": "PokeKid",
 	  "friendly_name": "Pikachu Fan Skye",
 	  "message_colour": "yellow"
 	},
 	"Pikachu Mum": {
-	  "sprite": "Pokefan_F",
+	  "sprite": "PokeFan_F",
 	  "friendly_name": "Pikachu Mum",
 	  "message_colour": "yellow"
 	},
 	"Plaza Challenger 1": {
-	  "sprite": "NPC 03",
+	  "sprite": "NPC03",
 	  "friendly_name": "Card Player",
 	  "message_colour": "green"
 	},
 	"Plaza Challenger 2": {
-	  "sprite": "NPC 05",
+	  "sprite": "NPC05",
 	  "friendly_name": "Card Player",
 	  "message_colour": "light_blue"
 	},
 	"Plaza Challenger 3": {
-	  "sprite": "NPC 06",
+	  "sprite": "NPC06",
 	  "friendly_name": "Tourist",
 	  "message_colour": "dark_blue"
 	},
 	"Plaza Challenger 4": {
-	  "sprite": "NPC 08",
+	  "sprite": "NPC08",
 	  "friendly_name": "Spectator",
 	  "message_colour": "purple"
 	},
 	"Plaza Challenger 5": {
-	  "sprite": "NPC 30",
+	  "sprite": "NPC25",
 	  "friendly_name": "Spectator",
 	  "message_colour": "green"
 	},
 	"Plaza Challenger 6": {
-	  "sprite": "NPC 10",
+	  "sprite": "NPC10",
 	  "friendly_name": "Card Enthusiast",
 	  "message_colour": "green"
 	},
 	"Plaza Challenger 7": {
-	  "sprite": "NPC 13",
+	  "sprite": "NPC11",
 	  "friendly_name": "Queuing Challenger",
 	  "message_colour": "grey"
 	},
 	"Plaza Challenger 7b": {
-	  "sprite": "NPC 14",
+	  "sprite": "NPC12",
 	  "friendly_name": "Spectator",
 	  "message_colour": "light_pink"
 	},
 	"Plaza Challenger 8": {
 	  "gift_type": "card",
 	  "gift_value": "basep-9",
-	  "sprite": "NPC 17",
+	  "sprite": "NPC15",
 	  "friendly_name": "Card Collector",
 	  "message_colour": "dark_green"
 	},
 	"Plaza Challenger 9": {
-	  "sprite": "NPC 86",
+	  "sprite": "NPC31",
 	  "friendly_name": "Card Fan",
 	  "message_colour": "aqua"
 	},
@@ -505,7 +505,7 @@
 	"Rocket Pack Gift": {
 	  "gift_type": "pack",
 	  "gift_value": "base5_a",
-	  "sprite": "Teamrocket_M",
+	  "sprite": "TeamRocket_M",
 	  "friendly_name": "Rocket Grunt",
 	  "message_colour": "black"
 	},
@@ -556,24 +556,24 @@
 	  "message_colour": "dark_blue"
 	},
 	"Station Manager": {
-	  "sprite": "Trainworker",
+	  "sprite": "TrainWorker",
 	  "friendly_name": "Station Manager",
 	  "message_colour": "dark_red"
 	},
 	"Sunbathing Coin Giver": {
 	  "gift_type": "coin",
 	  "gift_value": "REPLACECOIN",
-	  "sprite": "NPC 03",
+	  "sprite": "NPC03",
 	  "friendly_name": "Sunbather",
 	  "message_colour": "green"
 	},
 	"Sunbathing Couple F": {
-	  "sprite": "Youngcouple_2",
+	  "sprite": "YoungCouple_2",
 	  "friendly_name": "Sunbather",
 	  "message_colour": "light_blue"
 	},
 	"Sunbathing Couple M": {
-	  "sprite": "Youngcouple",
+	  "sprite": "YoungCouple",
 	  "friendly_name": "Sunbather",
 	  "message_colour": "light_blue"
 	},
@@ -615,12 +615,12 @@
 	  "message_colour": "dark_pink"
 	},
 	"Train Employee 1": {
-	  "sprite": "Trainworker2",
+	  "sprite": "TrainWorker2",
 	  "friendly_name": "Train Employee",
 	  "message_colour": "orange"
 	},
 	"Train Employee 2": {
-	  "sprite": "Trainworker3",
+	  "sprite": "TrainWorker3",
 	  "friendly_name": "Train Employee",
 	  "message_colour": "green"
 	},
@@ -632,27 +632,27 @@
 	"Wishing Well Coin Thrower": {
 	  "gift_type": "coin",
 	  "gift_value": "REPLACECOIN",
-	  "sprite": "NPC24",
+	  "sprite": "NPC56",
 	  "friendly_name": "Wishing Well Visitor",
 	  "message_colour": "light_pink"
 	},
 	"Woman Drinking Juice": {
-	  "sprite": "NPC 09",
+	  "sprite": "NPC09",
 	  "friendly_name": "Juice Drinker",
 	  "message_colour": "light_pink"
 	},
 	"Woman Staring Out To Sea": {
-	  "sprite": "Youngcouple2_2",
+	  "sprite": "YoungCouple2_2",
 	  "friendly_name": "Local Woman",
 	  "message_colour": "light_blue"
 	},
 	"Woman Trying To Shop": {
-	  "sprite": "NPC 32",
+	  "sprite": "NPC27",
 	  "friendly_name": "Shopper",
 	  "message_colour": "yellow"
 	},
 	"Woman Walking Neighbourhood": {
-	  "sprite": "NPC 87",
+	  "sprite": "NPC32",
 	  "friendly_name": "Neighbour",
 	  "message_colour": "light_red"
 	},
@@ -667,39 +667,39 @@
 	  "message_colour": "light_blue"
 	},
 	"Coin Flipper": {
-	  "sprite": "Coinflipper",
+	  "sprite": "CoinFlipper",
 	  "message_colour": "dark_blue",
 	  "friendly_name": "Coin Flipper",
 	  "npc_type": "coin_flipper"
 	},
 	"Card Buyer": {
-	  "sprite": "Bulkbuyer",
+	  "sprite": "BulkBuyer",
 	  "message_colour": "orange",
 	  "friendly_name": "Card Buyer",
 	  "npc_type": "card_buyer"
 	},
 	"Sleeve Seller": {
-	  "sprite": "Sleeveseller",
+	  "sprite": "SleeveSeller",
 	  "message_colour": "light_pink",
 	  "friendly_name": "Sleeve Seller",
 	  "npc_type": "sleeve_seller",
 	  "shop_id": "gym_plaza_sleeves"
 	},
 	"Weighed Pack Seller": {
-	  "sprite": "Weightedseller",
+	  "sprite": "WeightedSeller",
 	  "message_colour": "dark_red",
 	  "friendly_name": "Weighed Pack Seller",
 	  "npc_type": "weighted_pack_seller"
 	},
 	"Costume Salesman": {
-	  "sprite": "Costumeseller_2",
+	  "sprite": "CostumeSeller_2",
 	  "message_colour": "purple",
 	  "friendly_name": "Costume Salesman",
 	  "npc_type": "costume_seller",
 	  "shop_id": "harbour_market_costumes"
 	},
 	"Sleeve Seller 2": {
-	  "sprite": "Sleeveseller_2",
+	  "sprite": "SleeveSeller_2",
 	  "message_colour": "light_blue",
 	  "friendly_name": "Sleeve Seller",
 	  "npc_type": "sleeve_seller",
@@ -710,7 +710,7 @@
 	"Aromagirl Penelope": {
 	  "prize_cards": 4,
 	  "coin_reward": "Bellsprout Green",
-	  "sprite": "Aromalady",
+	  "sprite": "AromaLady",
 	  "music": "REPLACEMUSIC",
 	  "cash_reward": "90",
 	  "deck": "Strange Plants",
@@ -748,7 +748,7 @@
 	"Battlegirl Sofia": {
 	  "prize_cards": 6,
 	  "coin_reward": "Mankey Gold",
-	  "sprite": "Battlegirl",
+	  "sprite": "BattleGirl",
 	  "music": "REPLACEMUSIC",
 	  "cash_reward": "135",
 	  "deck": "Brickbreaker",
@@ -775,7 +775,7 @@
 	"Birdspotter Gregg": {
 	  "prize_cards": 6,
 	  "coin_reward": "Pidgeotto Silver",
-	  "sprite": "Birdkeeper_M",
+	  "sprite": "BirdKeeper_M",
 	  "music": "REPLACEMUSIC",
 	  "cash_reward": "135",
 	  "deck": "Big Ol Birbs",
@@ -784,7 +784,7 @@
 	"Birdspotter Tamsin": {
 	  "prize_cards": 4,
 	  "coin_reward": "Doduo Brown",
-	  "sprite": "Birdkeeper_F",
+	  "sprite": "BirdKeeper_F",
 	  "music": "REPLACEMUSIC",
 	  "cash_reward": "90",
 	  "deck": "Lil Birbs",
@@ -796,7 +796,7 @@
 	  "deck": "I Love Bugs!",
 	  "prize_cards": 4,
 	  "costume_reward": "BUGCATCHER",
-	  "sprite": "Bugcatcher",
+	  "sprite": "BugCatcher",
 	  "cash_reward": "90",
 	  "message_colour": "dark_green"
 	},
@@ -806,7 +806,7 @@
 	  "deck": "Big Bad Bugs!",
 	  "prize_cards": 4,
 	  "costume_reward": "BUGCATCHER2",
-	  "sprite": "Bugcatcher2",
+	  "sprite": "BugCatcher2",
 	  "cash_reward": "90",
 	  "message_colour": "dark_green"
 	},
@@ -843,7 +843,7 @@
 	"Card Expert Aurora": {
 	  "prize_cards": 6,
 	  "coin_reward": "Lapras Blue",
-	  "sprite": "Cooltrainer_F4",
+	  "sprite": "CoolTrainer_F4",
 	  "music": "REPLACEMUSIC",
 	  "cash_reward": "135",
 	  "deck": "Hailstorm",
@@ -852,7 +852,7 @@
 	"Card Expert Nathan": {
 	  "prize_cards": 6,
 	  "coin_reward": "Charizard Red",
-	  "sprite": "Cooltrainer_M3",
+	  "sprite": "CoolTrainer_M3",
 	  "music": "REPLACEMUSIC",
 	  "cash_reward": "135",
 	  "deck": "Energy Burn",
@@ -861,7 +861,7 @@
 	"Card Expert Ruby": {
 	  "prize_cards": 6,
 	  "coin_reward": "Charmeleon Red",
-	  "sprite": "Cooltrainer_F3",
+	  "sprite": "CoolTrainer_F3",
 	  "music": "REPLACEMUSIC",
 	  "cash_reward": "135",
 	  "deck": "Burnt Up",
@@ -888,7 +888,7 @@
 	"Doctor Mortimor": {
 	  "prize_cards": 6,
 	  "coin_reward": "Gloom Green",
-	  "sprite": "Doctor",
+	  "sprite": "Doctor_M",
 	  "music": "REPLACEMUSIC",
 	  "cash_reward": "135",
 	  "deck": "Self Affliction",
@@ -1004,7 +1004,7 @@
 	"Firebreather Darryl": {
 	  "prize_cards": 4,
 	  "coin_reward": "Magmar Red",
-	  "sprite": "Firebreather",
+	  "sprite": "FireBreather",
 	  "music": "REPLACEMUSIC",
 	  "cash_reward": "90",
 	  "deck": "Hot Air",
@@ -1013,7 +1013,7 @@
 	"Firebreather Kenneth": {
 	  "prize_cards": 4,
 	  "coin_reward": "Ponyta Red",
-	  "sprite": "Firebreather",
+	  "sprite": "FireBreather",
 	  "music": "REPLACEMUSIC",
 	  "cash_reward": "90",
 	  "deck": "Quadrapedal Firestarters",
@@ -1022,7 +1022,7 @@
 	"Fisherman Dave": {
 	  "prize_cards": 4,
 	  "coin_reward": "Magikarp Gold",
-	  "sprite": "Fisherman",
+	  "sprite": "Fisher_M",
 	  "music": "REPLACEMUSIC",
 	  "cash_reward": "45",
 	  "deck": "Fishy Fish",
@@ -1031,7 +1031,7 @@
 	"Fisherman Gary": {
 	  "prize_cards": 6,
 	  "coin_reward": "Gyarados Blue",
-	  "sprite": "Fisherman",
+	  "sprite": "Fisher_M",
 	  "music": "REPLACEMUSIC",
 	  "cash_reward": "135",
 	  "deck": "Big Catch",
@@ -1040,7 +1040,7 @@
 	"Fisherman John": {
 	  "prize_cards": 4,
 	  "coin_reward": "Squirtle Blue",
-	  "sprite": "Fisherman2",
+	  "sprite": "Fisher_M2",
 	  "music": "REPLACEMUSIC",
 	  "cash_reward": "65",
 	  "deck": "Seavolutions",
@@ -1049,7 +1049,7 @@
 	"Forest Ranger Tucker": {
 	  "prize_cards": 6,
 	  "coin_reward": "Kakuna Gold",
-	  "sprite": "Pokemonranger_M",
+	  "sprite": "PokemonRanger_M",
 	  "music": "REPLACEMUSIC",
 	  "cash_reward": "135",
 	  "deck": "Poisonous Stingers",
@@ -1058,7 +1058,7 @@
 	"Fossil Expert Jonathan": {
 	  "prize_cards": 6,
 	  "coin_reward": "Aerodactyl Brown",
-	  "sprite": "Ruinmaniac",
+	  "sprite": "RuinManiac",
 	  "music": "REPLACEMUSIC",
 	  "cash_reward": "135",
 	  "deck": "Earth Sea Sky",
@@ -1122,7 +1122,7 @@
 	"Guitarist Howard": {
 	  "prize_cards": 4,
 	  "coin_reward": "Raichu Gold 2",
-	  "sprite": "Guitarist2",
+	  "sprite": "Guitarist_M2",
 	  "music": "REPLACEMUSIC",
 	  "cash_reward": "125",
 	  "deck": "Rock N Shock",
@@ -1131,7 +1131,7 @@
 	"Guitarist Jonesy": {
 	  "prize_cards": 4,
 	  "coin_reward": "Magnemite Silver",
-	  "sprite": "Guitarist",
+	  "sprite": "Guitarist_M",
 	  "music": "REPLACEMUSIC",
 	  "cash_reward": "125",
 	  "deck": "Heavy Metal",
@@ -1303,7 +1303,7 @@
 	"Nature Lover Erin": {
 	  "prize_cards": 6,
 	  "coin_reward": "Ivysaur Green",
-	  "sprite": "Pokemonbreeder_F2",
+	  "sprite": "PokemonBreeder_F2",
 	  "music": "REPLACEMUSIC",
 	  "cash_reward": "135",
 	  "deck": "Forest Guardians",
@@ -1312,7 +1312,7 @@
 	"Ninjaboy Sasuke": {
 	  "prize_cards": 4,
 	  "coin_reward": "Ekans Purple",
-	  "sprite": "Ninjaboy",
+	  "sprite": "NinjaBoy",
 	  "music": "REPLACEMUSIC",
 	  "cash_reward": "110",
 	  "deck": "Ssssssnakes",
@@ -1344,7 +1344,7 @@
 	  "music": "Nice_battle (PTCG2 - GRs Grass Water Forts)",
 	  "deck": "Art Assistants",
 	  "prize_cards": 2,
-	  "sprite": "Artist",
+	  "sprite": "Artist_M",
 	  "cash_reward": "45",
 	  "message_colour": "lilac"
 	},
@@ -1354,7 +1354,7 @@
 	  "music": "REPLACEMUSIC",
 	  "deck": "Snap!",
 	  "prize_cards": 1,
-	  "sprite": "Pokekid",
+	  "sprite": "PokeKid",
 	  "cash_reward": "45",
 	  "message_colour": "yellow"
 	},
@@ -1364,7 +1364,7 @@
 	  "music": "REPLACEMUSIC",
 	  "deck": "Forest Mouse",
 	  "prize_cards": 1,
-	  "sprite": "Pokekid",
+	  "sprite": "PokeKid",
 	  "cash_reward": "45",
 	  "message_colour": "yellow"
 	},
@@ -1374,7 +1374,7 @@
 	  "music": "REPLACEMUSIC",
 	  "deck": "Leafychu",
 	  "prize_cards": 1,
-	  "sprite": "Pokekid",
+	  "sprite": "PokeKid",
 	  "cash_reward": "45",
 	  "message_colour": "yellow"
 	},
@@ -1384,7 +1384,7 @@
 	  "music": "REPLACEMUSIC",
 	  "deck": "Wave Surfing",
 	  "prize_cards": 1,
-	  "sprite": "Pokekid",
+	  "sprite": "PokeKid",
 	  "cash_reward": "45",
 	  "message_colour": "yellow"
 	},
@@ -1394,7 +1394,7 @@
 	  "music": "REPLACEMUSIC",
 	  "deck": "Thunderbolt!",
 	  "prize_cards": 1,
-	  "sprite": "Pokekid",
+	  "sprite": "PokeKid",
 	  "cash_reward": "45",
 	  "message_colour": "yellow"
 	},
@@ -1404,7 +1404,7 @@
 	  "music": "REPLACEMUSIC",
 	  "deck": "Fly Away",
 	  "prize_cards": 1,
-	  "sprite": "Pokekid",
+	  "sprite": "PokeKid",
 	  "cash_reward": "45",
 	  "message_colour": "yellow"
 	},
@@ -1415,7 +1415,7 @@
 	  "deck": "All The Pikachu",
 	  "prize_cards": 1,
 	  "costume_reward": "PokeKid",
-	  "sprite": "Pokefan_F",
+	  "sprite": "PokeFan_F",
 	  "cash_reward": "65",
 	  "message_colour": "yellow"
 	},
@@ -1472,14 +1472,14 @@
 	  "music": "REPLACEMUSIC",
 	  "deck": "Rocket Psychic Supremacy",
 	  "prize_cards": 6,
-	  "sprite": "Teamrocketboss",
+	  "sprite": "TeamRocketBoss",
 	  "cash_reward": "225",
 	  "message_colour": "black"
 	},
 	"Rocket Exec Archer": {
 	  "prize_cards": 6,
 	  "coin_reward": "Blastoise Silver",
-	  "sprite": "Teamrocketarcher",
+	  "sprite": "TeamRocketArcher",
 	  "music": "REPLACEMUSIC",
 	  "cash_reward": "180",
 	  "deck": "Jet Shell",
@@ -1491,14 +1491,14 @@
 	  "music": "REPLACEMUSIC",
 	  "deck": "Forced Evolution",
 	  "prize_cards": 6,
-	  "sprite": "Teamrocketariana",
+	  "sprite": "TeamRocketAriana",
 	  "cash_reward": "180",
 	  "message_colour": "black"
 	},
 	"Rocket Exec Petrel": {
 	  "prize_cards": 6,
 	  "coin_reward": "Arbok Purple",
-	  "sprite": "Teamrocketpetrel",
+	  "sprite": "TeamRocketPetrel",
 	  "music": "REPLACEMUSIC",
 	  "cash_reward": "180",
 	  "deck": "Relentless Poison",
@@ -1507,7 +1507,7 @@
 	"Rocket Exec Proton": {
 	  "prize_cards": 6,
 	  "coin_reward": "Dragonite Gold",
-	  "sprite": "Teamrocketproton",
+	  "sprite": "TeamRocketProton",
 	  "music": "REPLACEMUSIC",
 	  "cash_reward": "180",
 	  "deck": "Under The Shadow Of Wings",
@@ -1516,7 +1516,7 @@
 	"Rocket Grunt Damien": {
 	  "prize_cards": 4,
 	  "coin_reward": "Team Rocket Red",
-	  "sprite": "Teamrocket_M",
+	  "sprite": "TeamRocket_M",
 	  "music": "REPLACEMUSIC",
 	  "cash_reward": "110",
 	  "deck": "Rocket Underlings",
@@ -1528,14 +1528,14 @@
 	  "deck": "Scavenge And Retreat",
 	  "prize_cards": 6,
 	  "costume_reward": "TeamRocket_F, TeamRocket_M",
-	  "sprite": "Teamrocket_F",
+	  "sprite": "TeamRocket_F",
 	  "cash_reward": "180",
 	  "message_colour": "black"
 	},
 	"Rocket Grunt Penny": {
 	  "prize_cards": 4,
 	  "coin_reward": "Team Rocket Blue",
-	  "sprite": "Teamrocket_F",
+	  "sprite": "TeamRocket_F",
 	  "music": "REPLACEMUSIC",
 	  "cash_reward": "110",
 	  "deck": "Rocket Blast Off",
@@ -1626,7 +1626,7 @@
 	"Tourist Edmund": {
 	  "prize_cards": 6,
 	  "coin_reward": "Dratini Blue",
-	  "sprite": "Richboy",
+	  "sprite": "RichBoy",
 	  "music": "REPLACEMUSIC",
 	  "cash_reward": "180",
 	  "deck": "Elegance",
@@ -1654,7 +1654,7 @@
 	"Young Twin Anna": {
 	  "prize_cards": 2,
 	  "coin_reward": "Butterfree Purple",
-	  "sprite": "Twin1",
+	  "sprite": "Twin",
 	  "music": "REPLACEMUSIC",
 	  "cash_reward": "70",
 	  "deck": "Pretty Plants N Butterfly",
