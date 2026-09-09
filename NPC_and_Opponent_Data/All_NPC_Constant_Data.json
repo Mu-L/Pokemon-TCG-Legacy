@@ -692,14 +692,14 @@
 	  "npc_type": "weighted_pack_seller"
 	},
 	"Costume Salesman": {
-	  "sprite": "CostumeSeller_2",
+	  "sprite": "CostumeSeller2",
 	  "message_colour": "purple",
 	  "friendly_name": "Costume Salesman",
 	  "npc_type": "costume_seller",
 	  "shop_id": "harbour_market_costumes"
 	},
 	"Sleeve Seller 2": {
-	  "sprite": "SleeveSeller_2",
+	  "sprite": "SleeveSeller2",
 	  "message_colour": "light_blue",
 	  "friendly_name": "Sleeve Seller",
 	  "npc_type": "sleeve_seller",

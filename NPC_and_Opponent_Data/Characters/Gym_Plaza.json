@@ -1,94 +1,94 @@
 {
   "_help": [
-    "days    : '3-6' range | '1,3,5' list | '2-8/2' every other | '4' one day",
-    "times   : M=Morning A=Afternoon E=Evening N=Night. Combine: 'M,A' or 'M,A,E,N'",
-    "move    : bare pattern name, or {pattern, speed, distance, axis, radius}",
-    "requires: 'beaten: NAME' | 'met: NAME' | 'flag: NAME', any prefixed with 'not '.",
-    "          Compound gates use the longhand object form.",
-    "when    : optional rule list, evaluated TOP TO BOTTOM, FIRST MATCH WINS.",
-    "          A rule states when the character is present plus ONLY what differs.",
-    "          Anything a rule omits falls back to the character's own value above.",
-    "loop    : set false for story characters who must never repeat when the",
+	"days    : '3-6' range | '1,3,5' list | '2-8/2' every other | '4' one day",
+	"times   : M=Morning A=Afternoon E=Evening N=Night. Combine: 'M,A' or 'M,A,E,N'",
+	"move    : bare pattern name, or {pattern, speed, distance, axis, radius}",
+	"requires: 'beaten: NAME' | 'met: NAME' | 'flag: NAME', any prefixed with 'not '.",
+	"          Compound gates use the longhand object form.",
+	"when    : optional rule list, evaluated TOP TO BOTTOM, FIRST MATCH WINS.",
+	"          A rule states when the character is present plus ONLY what differs.",
+	"          Anything a rule omits falls back to the character's own value above.",
+	"loop    : set false for story characters who must never repeat when the",
     "          calendar loops -- they are matched against the real day instead."
   ],
   "map": "Gym_Plaza",
   "calendar": {
-    "opens": 9,
-    "authored_through": 16,
-    "loop": {
-      "from": 13,
-      "period": 4
-    }
+	"opens": 9,
+	"authored_through": 16,
+	"loop": {
+	  "from": 13,
+	  "period": 4
+	}
   },
   "npcs": {
-    "Coin Flipper": {
-      "says": {
-        "meet": "Fancy trying your luck? We're running a special game of chance in order to win a unique Golden Pokeball coin to commomerate the Gym Challenge. Flip a coin 5 times and if you can get 5 heads in a row without getting a tails, you'll win the prize. It's $50 per try if you want to give it a go",
-        "repeat": "Fancy trying your luck again? Remember it's $50 per entry and you just need to flip 5 heads in a row to win a Golden Pokeball coin."
-      },
-      "move": "idle_right",
-      "days": "9-16",
-      "times": "M,A,E",
-      "at": [1611, 1319]
-    },
-    "Card Buyer": {
-      "says": {
-        "meet": "You look like you're sitting on a massive stash of cards there. I'll buy the spare cards in your collection as you won't need more than 4 of each. I'll buy all your spares or can sell just the spares of each rarity to me if you don't want them. I'll give you a good price!",
-        "repeat": "You looking to sell off your old bulk that you don't need? I'll take it all off your hands for a good price. You can sell everything all at once or just sell certain rarities at a time if you want."
-      },
-      "move": "idle_left",
-      "days": "9-16",
-      "times": "M,A,E",
-      "at": [1892, 1319]
-    },
-    "Sleeve Seller": {
-      "says": {
-        "meet": "Hello! I have some luxury limited edition card sleeves for sale if you're looking to buy. You won't find these anywhere else.",
-        "repeat": "Hello! Are you interested in some limited edition card sleeves?"
-      },
-      "move": "idle_left",
-      "days": "9-16",
-      "times": "M,A,E",
-      "at": [1893, 1511]
-    },
-    "Weighed Pack Seller": {
-      "says": {
-        "meet": "How's your collection coming along? If you're building a deck, and you're missing some of the less rare cards, I'm selling packs that only contain common and uncommon cards at over half the price. You won't get any rare cards at all but it's a big discount if you just need some commons to finish a deck.",
-        "repeat": "Are you looking for some common and uncommon cards? Remember none of these packs will have rare or holo rare cards, but they're heavily discounted."
-      },
-      "move": "idle_right",
-      "days": "9-16",
-      "times": "M,A,E",
-      "at": [1612, 1511]
-    }
+	"Coin Flipper": {
+	  "says": {
+		"meet": "Fancy trying your luck? We're running a special game of chance in order to win a unique Golden Pokeball coin to commomerate the Gym Challenge. Flip a coin 5 times and if you can get 5 heads in a row without getting a tails, you'll win the prize. It's $50 per try if you want to give it a go",
+		"repeat": "Fancy trying your luck again? Remember it's $50 per entry and you just need to flip 5 heads in a row to win a Golden Pokeball coin."
+	  },
+	  "move": "idle_right",
+	  "days": "9-16",
+	  "times": "M,A,E",
+	  "at": [1611, 1319]
+	},
+	"Card Buyer": {
+	  "says": {
+		"meet": "You look like you're sitting on a massive stash of cards there. I'll buy the spare cards in your collection as you won't need more than 4 of each. I'll buy all your spares or can sell just the spares of each rarity to me if you don't want them. I'll give you a good price!",
+		"repeat": "You looking to sell off your old bulk that you don't need? I'll take it all off your hands for a good price. You can sell everything all at once or just sell certain rarities at a time if you want."
+	  },
+	  "move": "idle_left",
+	  "days": "9-16",
+	  "times": "M,A,E",
+	  "at": [1892, 1319]
+	},
+	"Sleeve Seller": {
+	  "says": {
+		"meet": "Hello! I have some luxury limited edition card sleeves for sale if you're looking to buy. You won't find these anywhere else.",
+		"repeat": "Hello! Are you interested in some limited edition card sleeves?"
+	  },
+	  "move": "idle_left",
+	  "days": "9-16",
+	  "times": "M,A,E",
+	  "at": [1893, 1511]
+	},
+	"Weighed Pack Seller": {
+	  "says": {
+		"meet": "How's your collection coming along? If you're building a deck, and you're missing some of the less rare cards, I'm selling packs that only contain common and uncommon cards at over half the price. You won't get any rare cards at all but it's a big discount if you just need some commons to finish a deck.",
+		"repeat": "Are you looking for some common and uncommon cards? Remember none of these packs will have rare or holo rare cards, but they're heavily discounted."
+	  },
+	  "move": "idle_right",
+	  "days": "9-16",
+	  "times": "M,A,E",
+	  "at": [1612, 1511]
+	}
   },
   "opponents": {
-    "Spectator Pete": {
-      "says": {
-        "meet": "Heh, I've built a deck entirely from gym cards that just cannot be beaten. You'll never be able to defeat me.",
-        "repeat": "I'm gonna try this deck again.",
-        "first_win": "WHAT! You must have cheated. I'll see you on Reddit.",
-        "rematch_win": "4chan will hear about this.",
-        "loss": "Hahaha! Go woke, go broke kiddo."
-      },
-      "sleeve": "Giga_Charizard_ETB",
-      "sleeve_reward": "Giga_Charizard_ETB",
-      "move": "random_wander",
-      "when": [
-        {
-          "days": "9",
-          "times": "E,N"
-        },
-        {
-          "days": "10",
-          "times": "A,E,N"
-        },
-        {
-          "days": "11",
-          "times": "M,A,E"
-        }
-      ],
-      "at": [1261, 1511]
-    }
+	"Spectator Pete": {
+	  "says": {
+		"meet": "Heh, I've built a deck entirely from gym cards that just cannot be beaten. You'll never be able to defeat me.",
+		"repeat": "I'm gonna try this deck again.",
+		"first_win": "WHAT! You must have cheated. I'll see you on Reddit.",
+		"rematch_win": "4chan will hear about this.",
+		"loss": "Hahaha! Go woke, go broke kiddo."
+	  },
+	  "sleeve": "Giga_Charizard_ETB",
+	  "sleeve_reward": "Giga_Charizard_ETB",
+	  "move": "random_wander",
+	  "when": [
+		{
+		  "days": "9",
+		  "times": "E,N"
+		},
+		{
+		  "days": "10",
+		  "times": "A,E,N"
+		},
+		{
+		  "days": "11",
+		  "times": "M,A,E"
+		}
+	  ],
+	  "at": [1261, 1511]
+	}
   }
 }
