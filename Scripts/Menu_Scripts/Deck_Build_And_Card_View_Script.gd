@@ -78,11 +78,11 @@ const TOOL_BTN_H      := 66.0
 const TOOL_BTN_GAP    := 10.0
 const TOOL_STACK_BOT  := 972.0
 
-## ISSUE #227: SEVEN columns, not nine, with the cards grown to take up the room.
-## Sized so seven columns plus CARD_H_SEP still fit GRID_W:
-## 7 * 231 + 6 * 10 = 1677, inside 1678. Raising the gap means shrinking this,
-## and the height must keep the 177:246 card aspect (231 * 1.3898 = 321).
-const CARD_SIZE     := Vector2(231, 321)
+## EIGHT columns, with the cards shrunk to take up exactly the same room.
+## Sized so eight columns plus CARD_H_SEP still fit GRID_W:
+## 8 * 201 + 7 * 10 = 1678, exactly GRID_W. Raising the gap means shrinking this,
+## and the height must keep the 177:246 card aspect (201 * 1.3898 = 279).
+const CARD_SIZE     := Vector2(201, 279)
 ## Raised from 2: at 2px the cards read as one solid sheet rather than as a grid
 ## of separate items.
 ## Composition rows, in display order, with their headings.
@@ -101,7 +101,7 @@ const CARD_V_SEP    := 10
 ## The "n / N" strip across the bottom of every card cell.
 const COUNT_STRIP_H    := 30
 const COUNT_STRIP_FONT := 17
-const COLUMNS       := 7          # ISSUE #227
+const COLUMNS       := 8
 const MAX_COPIES    := 4
 const DECK_SIZE     := 60
 
