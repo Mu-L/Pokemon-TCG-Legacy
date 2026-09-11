@@ -83,9 +83,13 @@ func _build_ui() -> void:
 	var bars := UIKit.convert_legacy_screen(self, "New trainer")
 	print("ISSUE #192 FIX ACTIVE: first-boot setup converted to the Spectrum Night chrome")
 
-	var hint := Label.new()
-	UIKit.set_label(hint, "subtitle", "Choose your name, birthday and look", "chrome_fg")
-	bars["header"].right.add_child(hint)
+	# A CHIP, not a bare label. The header's right slot sits over the warm end of
+	# the chrome gradient, which on the brighter themes does not carry plain white
+	# text at this size — and this was the only bare non-title label on a chrome
+	# bar anywhere in the game; every other side slot already uses a chip. The
+	# chip brings its own background, so it reads on any theme's bar.
+	bars["header"].right.add_child(
+		UIKit.make_chip("Choose your name, birthday and look", "on_chrome"))
 
 	# ── Name box ─────────────────────────────────────────────
 	_name_box = _make_field("Enter your name...", 15, FIELD_W, NAME_Y, FIELD_FONT)
@@ -131,7 +135,8 @@ func _make_field(placeholder: String, max_len: int, w: float, y: float,
 	box.alignment = HORIZONTAL_ALIGNMENT_CENTER
 	box.add_theme_font_override("font", UITheme.font("name"))
 	box.add_theme_font_size_override("font_size", font_size)
-	box.add_theme_color_override("font_color", Color.WHITE)
+	# field_fg, not white: on a light theme white text in the name box is invisible.
+	box.add_theme_color_override("font_color", UITheme.col("field_fg"))
 	box.add_theme_color_override("font_placeholder_color", UITheme.col("field_mute"))
 	box.text_changed.connect(_on_input_changed)
 	add_child(box)

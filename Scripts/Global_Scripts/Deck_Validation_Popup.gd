@@ -27,8 +27,6 @@ const CARD_H_SEP := 2
 const CARD_V_SEP := 2
 const COLUMNS    := 9
 
-const KENNEY_THEME     := "res://UI_Themes/ui/ui_secondary.tres"
-const KENNEY_RED_THEME := "res://UI_Themes/ui/ui_danger.tres"
 
 # Builds and attaches the overlay to `parent`. `on_closed` is invoked
 # (with no args) when the player clicks the close button.
@@ -50,7 +48,7 @@ static func show_popup(parent: Node,
 	backdrop.z_index = 0
 	overlay.add_child(backdrop)
 
-	var kenney: Theme = load(KENNEY_THEME)
+	var kenney: Theme = UIKit.button_theme("secondary")
 
 	var title_lbl := Label.new()
 	if kenney:
@@ -138,7 +136,7 @@ static func show_popup(parent: Node,
 	close_btn.custom_minimum_size = Vector2(226, 63)
 	close_btn.position = Vector2(1689, 1003)
 	close_btn.z_index = 20
-	var red_theme = load(KENNEY_RED_THEME)
+	var red_theme = UIKit.button_theme("danger")
 	if red_theme:
 		close_btn.theme = red_theme
 	close_btn.add_theme_font_size_override("font_size", 23)

@@ -429,15 +429,15 @@ func setup(unlocked_set_ids: Array, set_list: Array) -> void:
 	_unlocked = unlocked_set_ids
 	_set_list = set_list
 
-	_theme_white = load("res://UI_Themes/ui/ui_secondary.tres")
+	_theme_white = UIKit.button_theme("secondary")
 	# ISSUE #254: "green" and "blue" are STALE NAMES kept only so the call sites
 	# below read the way they always did — every one of them loads ui_selected,
 	# i.e. the same pink the Options buttons use. Nothing on this screen paints a
 	# selected state any other colour; green is save/confirm only.
-	_theme_green = load("res://UI_Themes/ui/ui_selected.tres")
-	_theme_blue  = load("res://UI_Themes/ui/ui_selected.tres")
+	_theme_green = UIKit.button_theme("selected")
+	_theme_blue  = UIKit.button_theme("selected")
 	# Reset and Cancel back out; they do not destroy anything.
-	_theme_red   = load("res://UI_Themes/ui/ui_secondary.tres")
+	_theme_red   = UIKit.button_theme("secondary")
 
 	# A plain Control (not a CanvasLayer) so it sits in the normal z order: above the deck screen's
 	# right-hand border (z 50) but still inside this scene, exactly like the energy style picker.
@@ -480,7 +480,7 @@ func _build_header() -> void:
 	title.theme = _theme_white
 	title.text = "CARD SEARCH"
 	title.add_theme_font_size_override("font_size", TITLE_FONT)
-	title.add_theme_color_override("font_color", Color.WHITE)
+	title.add_theme_color_override("font_color", UITheme.col("field_fg"))
 	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	title.vertical_alignment   = VERTICAL_ALIGNMENT_CENTER
 	title.position = Vector2(360.0, 0.0)
@@ -566,7 +566,7 @@ func _build_name_row(y: float) -> float:
 	_name_edit.custom_minimum_size = Vector2(NAME_W, h)
 	_name_edit.add_theme_font_size_override("font_size", NAME_FONT)
 	# ISSUE #181: pure white. Black was left over from the light filter panel.
-	_name_edit.add_theme_color_override("font_color", Color.WHITE)
+	_name_edit.add_theme_color_override("font_color", UITheme.col("field_fg"))
 	_name_edit.placeholder_text = "Card name..... (comma-separate for several)"
 	# ISSUE #149: no length cap — a comma-separated list of card names runs well past 30 characters.
 	_name_edit.z_index = CONTENT_Z
@@ -736,7 +736,7 @@ func _build_illustrator_row(y: float) -> float:
 	_illus_edit.custom_minimum_size = Vector2(ILLUS_W, ILLUS_H)
 	_illus_edit.add_theme_font_size_override("font_size", ILLUS_FONT)
 	# ISSUE #181
-	_illus_edit.add_theme_color_override("font_color", Color.WHITE)
+	_illus_edit.add_theme_color_override("font_color", UITheme.col("field_fg"))
 	_illus_edit.placeholder_text = "Illustrator name..... (comma-separate for several)"
 	# ISSUE #149: no length cap, same as the name box.
 	_illus_edit.z_index = CONTENT_Z

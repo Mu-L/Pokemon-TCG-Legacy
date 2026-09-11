@@ -262,10 +262,19 @@ var player_transparent_walls_active: bool = false   # gym2-125 Transparent Walls
 var opponent_transparent_walls_active: bool = false
 
 # PRELOADED RESOURCES
-var theme_disabled = preload("res://UI_Themes/ui/ui_secondary.tres")
-var theme_green = preload("res://UI_Themes/ui/ui_primary.tres")
-var theme_blue = preload("res://UI_Themes/ui/ui_secondary.tres")
-var theme_red = preload("res://UI_Themes/ui/ui_danger.tres")
+#
+# The four button Themes are GETTERS, not stored resources. Button faces are
+# baked per theme, so a stored Theme would keep painting the old theme's colours
+# after the player switches. load() hits Godot's resource cache, so re-reading
+# it per use costs nothing.
+var theme_disabled : Theme:
+	get: return UIKit.button_theme("secondary")
+var theme_green : Theme:
+	get: return UIKit.button_theme("primary")
+var theme_blue : Theme:
+	get: return UIKit.button_theme("secondary")
+var theme_red : Theme:
+	get: return UIKit.button_theme("danger")
 var card_display_script = preload("res://Scripts/Global_Scripts/Card_Image_Loader_Script.gd")
 var card_back_texture: Texture2D          # player's sleeve small — set in _ready
 var opponent_card_back_texture: Texture2D # opponent's sleeve small — set in _ready

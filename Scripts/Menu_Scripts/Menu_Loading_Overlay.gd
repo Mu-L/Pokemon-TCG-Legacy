@@ -81,7 +81,7 @@ func show(host: Node, icon_offset_x: float = 0.0, blocker_top_inset: float = 0.0
 	_overlay.add_child(dim)
 
 	var box := PanelContainer.new()
-	var kenney_theme = load("res://UI_Themes/ui/ui_secondary.tres")
+	var kenney_theme = UIKit.button_theme("secondary")
 	if kenney_theme:
 		box.theme = kenney_theme
 	box.custom_minimum_size = Vector2(280, 160)
@@ -102,7 +102,10 @@ func show(host: Node, icon_offset_x: float = 0.0, blocker_top_inset: float = 0.0
 
 	# Spinning square acts as the loading indicator.
 	var spinner := ColorRect.new()
-	spinner.color = Color(1, 1, 1, 0.9)
+	# The accent, not white: on a light theme a white square on a lightly dimmed
+	# screen is invisible, and the accent is the one colour every theme guarantees
+	# stands out against its own field.
+	spinner.color = UITheme.col_a("accent", 0.9)
 	spinner.custom_minimum_size = Vector2(48, 48)
 	spinner.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 	spinner.pivot_offset = Vector2(24, 24)

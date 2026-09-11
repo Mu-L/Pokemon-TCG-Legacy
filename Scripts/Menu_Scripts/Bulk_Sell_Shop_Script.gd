@@ -992,7 +992,7 @@ func _spawn_float_label(text: String, centre: Vector2, font_size: int, outline: 
 	label.custom_minimum_size = box
 	label.size                = box
 	label.mouse_filter        = Control.MOUSE_FILTER_IGNORE
-	label.theme               = load(CardViewerList.KENNEY_THEME_PATH)
+	label.theme               = UIKit.button_theme("secondary")
 	label.add_theme_font_size_override("normal_font_size", font_size)
 	label.add_theme_color_override("font_outline_color", Color.BLACK)
 	label.add_theme_constant_override("outline_size", outline)
@@ -1016,7 +1016,7 @@ func _spawn_float_label(text: String, centre: Vector2, font_size: int, outline: 
 func _get_bold_font() -> FontVariation:
 	if _bold_font != null:
 		return _bold_font
-	var theme_res = load(CardViewerList.KENNEY_THEME_PATH)
+	var theme_res = UIKit.button_theme("secondary")
 	var base : Font = theme_res.default_font if theme_res != null else null
 	if base == null:
 		return null

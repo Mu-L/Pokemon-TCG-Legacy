@@ -160,6 +160,19 @@ var animation_speed_setting: String   = DEFAULT_ANIMATION_SPEED
 var reduce_motion_setting: String     = DEFAULT_REDUCE_MOTION
 var intro_outro_setting: String       = DEFAULT_INTRO_OUTRO
 
+# The chosen colour theme, persisted alongside the rest. There is deliberately no
+# DEFAULT_THEME const here — UITheme owns the list and the default, and a second
+# copy of the name would be one more thing to drift. See set_ui_theme().
+var ui_theme_setting: String = ""
+
+# Hides the PAINT of the header and footer bars, and nothing else. The bars keep
+# their space and every title, chip and button inside them keeps drawing exactly
+# where it was, so the contents appear to float over the field. See
+# UIKit.ChromeBar._refresh_bar_paint() for why this cannot be plain `visible`.
+const HIDE_BARS_OPTIONS := ["no", "yes"]
+const DEFAULT_HIDE_BARS := "no"
+var hide_bars_setting: String = DEFAULT_HIDE_BARS
+
 # Applies a preset key to the live multiplier. Pass save = false to set it without touching the
 # save file (used on boot).
 ## Sets the one animation-speed preset. All three domains follow it through
@@ -207,6 +220,48 @@ func set_intro_outro(choice: String, save: bool = true) -> void:
 	if save:
 		_save_current_data_field("intro_outro_animation", intro_outro_setting)
 
+
+## Sets the UI colour theme and persists it. Pass save = false on boot.
+##
+## UITheme owns the list of valid names and the default, so an empty or unknown
+## value falls back to UITheme.DEFAULT_THEME rather than to a const copied here.
+## That means adding a theme is still a one-file change.
+##
+## Changing this does NOT repaint anything already on screen — UITheme emits
+## theme_changed for the live chrome, but baked button art and every colour a
+## screen read at build time only refresh when that screen is rebuilt. The
+## Options screen re-enters itself after saving for exactly this reason.
+func set_ui_theme(theme_name: String, save: bool = true) -> void:
+	var ui := get_node_or_null("/root/UITheme")
+	if ui == null:
+		return
+	var name := theme_name
+	if name == "" or not ui.THEMES.has(name):
+		if name != "":
+			push_warning("GameState: unknown UI theme '" + name + "'")
+		name = ui.DEFAULT_THEME
+	ui_theme_setting = name
+	ui.set_theme(name)
+	if save:
+		_save_current_data_field("ui_theme", ui_theme_setting)
+
+
+## Shows or hides the chrome bars' paint. Pass save = false on boot.
+##
+## Emits theme_changed so any bar already on screen picks it up — the Options
+## screen is sometimes an overlay with the map still loaded behind it, and that
+## map's bars are never rebuilt.
+func set_hide_bars(choice: String, save: bool = true) -> void:
+	if not choice in HIDE_BARS_OPTIONS:
+		push_warning("GameState: unknown hide bars choice '" + choice + "'")
+		return
+	hide_bars_setting = choice
+	var ui := get_node_or_null("/root/UITheme")
+	if ui != null:
+		ui.theme_changed.emit()
+	if save:
+		_save_current_data_field("hide_bars", hide_bars_setting)
+
 # Reads every saved animation preset out of Player_Current_Data.json and applies it. Called once on
 # boot. An unknown value falls back to the default rather than erroring, so a wiped or hand-edited
 # save still boots cleanly.
@@ -229,6 +284,17 @@ func _load_animation_speed() -> void:
 	if not intro in INTRO_OUTRO_OPTIONS:
 		intro = DEFAULT_INTRO_OUTRO
 	set_intro_outro(intro, false)
+
+	# The colour theme rides along here because this runs once on boot, before any
+	# screen builds. It MUST be applied before the first screen reads a colour or
+	# the boot splash paints itself in the default theme and everything after it
+	# disagrees. An unknown name falls back inside set_ui_theme().
+	set_ui_theme(str(data.get("ui_theme", "")), false)
+
+	var bars: String = str(data.get("hide_bars", DEFAULT_HIDE_BARS))
+	if not bars in HIDE_BARS_OPTIONS:
+		bars = DEFAULT_HIDE_BARS
+	set_hide_bars(bars, false)
 
 # ISSUE #34: the overworld walking-speed presets offered by the Options screen, keyed by the value
 # stored in Player_Current_Data.json under "walking_speed". TWEAKABLE — raising a number speeds that

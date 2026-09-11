@@ -56,7 +56,12 @@ const GOD_PACK_SIZE      : int   = 10      # Cards per god pack
 const WEIGHTED_COMMONS   : int   = 6
 const WEIGHTED_UNCOMMONS : int   = 4
 
-var _theme_kenney : Theme = preload("res://UI_Themes/ui/ui_secondary.tres")
+# A GETTER, not a stored resource. Two reasons: an autoload member initialiser
+# runs during autoload construction, before another autoload is safe to reach;
+# and a stored Theme would go stale the moment the player changes theme.
+# load() hits Godot's resource cache, so this is not a per-call disk read.
+var _theme_kenney : Theme:
+	get: return UIKit.button_theme("secondary")
 
 # ── Session state ──────────────────────────────────────────
 var _is_active           : bool  = false

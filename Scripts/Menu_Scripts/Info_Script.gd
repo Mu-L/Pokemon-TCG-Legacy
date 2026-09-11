@@ -332,7 +332,9 @@ func _build_left_panel() -> void:
 	name_box.size = Vector2(LEFT_W - PANEL_PAD * 2.0 + NAME_BOX_BLEED * 2.0, NAME_BOX_H)
 	name_box.custom_minimum_size = name_box.size
 	name_box.theme = null
-	name_box.add_theme_color_override("font_color", Color.WHITE)
+	# field_fg, not white: on a light theme the trainer name was white on a white
+	# pill and completely unreadable.
+	name_box.add_theme_color_override("font_color", UITheme.col("field_fg"))
 	name_box.add_theme_font_override("font", UITheme.font("name"))
 	name_box.add_theme_font_size_override("font_size", NAME_FONT)
 
@@ -907,7 +909,6 @@ const CHEAT_RAINBOW_VAL  : float = 1.0   # brightness
 const CHEAT_BOX_HEIGHT   : float = 120.0
 const CHEAT_BOX_Y_OFFSET : float = -42.0
 
-const CHEAT_THEME_PATH := "res://UI_Themes/ui/ui_secondary.tres"
 
 func _flash_cheat_message(message: String) -> void:
 	# ISSUE #53 FIX: drive the cheat popup as a self-contained "float up + fade out" like the in-match
@@ -931,7 +932,7 @@ func _flash_cheat_message(message: String) -> void:
 	# ISSUE #132: RichTextLabel rather than Label purely for BBCode's built-in [rainbow], which
 	# offsets the hue per character and advances it every frame — the same colour wave the "Bonus!"
 	# label uses in Pack_Opening_Manager._show_bonus_label().
-	var theme_kenney : Theme = load(CHEAT_THEME_PATH)
+	var theme_kenney : Theme = UIKit.button_theme("secondary")
 	var label := RichTextLabel.new()
 	label.name                = "CheatNotificationLabel"
 	label.bbcode_enabled      = true

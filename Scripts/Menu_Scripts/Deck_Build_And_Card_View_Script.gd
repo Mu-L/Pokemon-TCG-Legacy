@@ -447,7 +447,7 @@ func _build_chrome() -> void:
 	deck_name_edit.theme = null
 	# White, not the inherited muted field colour - the deck name is the loudest
 	# thing in the header after the set.
-	deck_name_edit.add_theme_color_override("font_color", Color.WHITE)
+	deck_name_edit.add_theme_color_override("font_color", UITheme.col("field_fg"))
 	deck_name_edit.add_theme_font_override("font", UITheme.font("name"))
 	deck_name_edit.add_theme_font_size_override("font_size", DECK_NAME_FONT)
 	name_holder.add_child(deck_name_edit)
@@ -1226,12 +1226,12 @@ func _on_change_energy_style_pressed() -> void:
 
 	# ── Title label ──
 	var title := Label.new()
-	var kenney_theme = load("res://UI_Themes/ui/ui_secondary.tres")
+	var kenney_theme = UIKit.button_theme("secondary")
 	if kenney_theme:
 		title.theme = kenney_theme
 	title.text = "Select Energy Card Style"
 	title.add_theme_font_size_override("font_size", 32)
-	title.add_theme_color_override("font_color", Color.WHITE)
+	title.add_theme_color_override("font_color", UITheme.col("field_fg"))
 	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	title.position = Vector2(200, 20)
 	title.size = Vector2(1200, 50)
@@ -3259,7 +3259,7 @@ var _msg_bold_font: FontVariation = null
 func _get_msg_bold_font() -> FontVariation:
 	if _msg_bold_font != null:
 		return _msg_bold_font
-	var theme_res = load("res://UI_Themes/ui/ui_secondary.tres")
+	var theme_res = UIKit.button_theme("secondary")
 	if theme_res == null or theme_res.default_font == null:
 		return null
 	_msg_bold_font = FontVariation.new()
@@ -3280,7 +3280,7 @@ func _show_deck_message(text: String) -> void:
 	lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	lbl.z_index = MSG_Z_INDEX
-	var kenney_theme = load("res://UI_Themes/ui/ui_secondary.tres")
+	var kenney_theme = UIKit.button_theme("secondary")
 	if kenney_theme:
 		lbl.theme = kenney_theme
 	var bold := _get_msg_bold_font()
@@ -3460,7 +3460,7 @@ func _make_rename_deck_button(deck_name: String) -> Button:
 	btn.custom_minimum_size = Vector2(LOAD_ROW_H, LOAD_ROW_H)
 	btn.size_flags_horizontal = Control.SIZE_SHRINK_END
 	btn.tooltip_text = "Rename this deck"
-	var blue_theme = load("res://UI_Themes/ui/ui_secondary.tres")
+	var blue_theme = UIKit.button_theme("secondary")
 	if blue_theme:
 		btn.theme = blue_theme
 

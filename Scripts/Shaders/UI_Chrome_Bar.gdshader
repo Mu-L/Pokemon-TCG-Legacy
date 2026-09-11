@@ -20,6 +20,23 @@ shader_type canvas_item;
 // period, so it is periodic by construction and ANY offset is seamless. The
 // spec's 34px-over-6.8s is still honoured, it just arrives as a plain 5 px/s.
 //
+// ── WHY THE EDGE IS HARD, AND WHAT THE ONE PIXEL IS FOR ──────
+// The chevrons are thin and closely spaced: 3px of ink every 17px on the bars,
+// 18px every 74px on the field. That is the authored design and it is meant to
+// read as a fine texture, not as broad sweeps of light.
+//
+// The edge is HARD. The one-pixel smoothstep on each side is ANTIALIASING and
+// nothing else — a 3px diagonal scrolling at sub-pixel offsets shimmers badly
+// without it. Do not widen that pixel into a feather; feathering these turns the
+// texture into soft bands and loses the design.
+//
+// Two bands are subtracted rather than one so the stripe nearest d == period
+// antialiases correctly too.
+//
+// If the chevrons ever read as too busy, LOWER THE ALPHA. Do not widen them and
+// do not space them further apart — at 3px and 6% white they are meant to be
+// barely there.
+//
 // ── REDUCED MOTION ───────────────────────────────────────────
 // Set scroll_speed to 0.0. The stripes stay, they simply stop. Do not hide
 // them — they are a third of what carries the theme.
@@ -35,9 +52,24 @@ uniform float grad_b_pos  = 0.52;
 // Chevrons
 uniform vec4  stripe_color : source_color = vec4(1.0, 1.0, 1.0, 0.06);
 uniform float angle_deg    = 115.0;
-uniform float stripe_width = 3.0;    // px of ink
-uniform float period       = 17.0;   // px from one stripe's start to the next
-uniform float scroll_speed = 5.0;    // px/s along +X; negative scrolls left
+uniform float stripe_width = 3.0;     // px of ink
+uniform float period       = 17.0;    // px from one stripe's start to the next
+uniform float scroll_speed = 5.517;   // px/s along +X; negative scrolls left
+
+// ── THE INNER KEYLINE ────────────────────────────────────────
+// A 1px rule along the edge of the bar that faces the content: the BOTTOM of the
+// header, the TOP of the footer. `line_at_bottom` picks which.
+//
+// It exists because five of the eight themes are built on a flat, near-black bar
+// over a near-black field. Without a keyline there is nothing at all separating
+// the two, and Code and Umbreon in particular lose most of their identity — for
+// them the rule IS the theme (cyan and brass respectively).
+//
+// Themes with a vivid gradient bar set chrome_line transparent and get no rule,
+// which is what they had before this existed.
+uniform vec4  line_color     : source_color = vec4(0.0, 0.0, 0.0, 0.0);
+uniform float line_px        = 1.0;
+uniform bool  line_at_bottom = true;
 
 uniform vec2  rect_size    = vec2(1920.0, 92.0);
 
@@ -45,6 +77,17 @@ uniform vec2  rect_size    = vec2(1920.0, 92.0);
 uniform float corner_radius = 0.0;
 
 void fragment() {
+	// ── THE BAR'S OWN OPACITY, CAPTURED BEFORE IT IS THROWN AWAY ──
+	// On entry COLOR carries the node's colour times its modulate and
+	// self_modulate. This shader then assigns COLOR outright, which USED TO
+	// discard all of that — so setting self_modulate on the bar did nothing and
+	// the "hide header/footer" option had no visible effect at all.
+	//
+	// Read it first and multiply it back in at the end. self_modulate is how the
+	// bar is un-painted without touching the title, chips and buttons parented
+	// inside it; see UIKit.ChromeBar._refresh_bar_paint().
+	float node_alpha = COLOR.a;
+
 	vec2 p = UV * rect_size;
 
 	// ── Gradient ──
@@ -70,6 +113,14 @@ void fragment() {
 
 	vec3 col = mix(grad, stripe_color.rgb, ink * stripe_color.a);
 
+	// ── Keyline ──
+	// Measured in pixels from the inner edge, so a 92px header and a 162px match
+	// footer draw an identically thick rule.
+	float from_inner = line_at_bottom ? rect_size.y - p.y : p.y;
+	if (line_color.a > 0.0 && from_inner <= line_px) {
+		col = mix(col, line_color.rgb, line_color.a);
+	}
+
 	// ── Silhouette ──
 	float alpha = 1.0;
 	if (corner_radius > 0.0) {
@@ -80,5 +131,5 @@ void fragment() {
 		alpha = 1.0 - smoothstep(-0.75, 0.75, sd);
 	}
 
-	COLOR = vec4(col, alpha);
+	COLOR = vec4(col, alpha * node_alpha);
 }

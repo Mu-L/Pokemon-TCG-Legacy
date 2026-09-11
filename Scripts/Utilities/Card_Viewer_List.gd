@@ -298,7 +298,6 @@ const VIEWER_HEADER_COLOUR   := "#ffd86b"  # pale gold; reads over the patterned
 ## text actually rendered can never disagree about what is being measured.
 const VIEWER_HEADERS := ["INDIVIDUAL", "CATEGORIES"]
 
-const KENNEY_THEME_PATH := "res://UI_Themes/ui/ui_secondary.tres"
 
 
 ## Builds the "<name> (xN)" lines for the INDIVIDUAL section, in the order given.
@@ -408,7 +407,7 @@ static func build_side_list(parent: Control, lines: Array, cat_rows: Array,
 	list_label.autowrap_mode  = TextServer.AUTOWRAP_WORD_SMART
 	list_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	list_label.mouse_filter   = Control.MOUSE_FILTER_IGNORE
-	var kenney_theme = load(KENNEY_THEME_PATH)
+	var kenney_theme = UIKit.button_theme("secondary")
 	if kenney_theme:
 		list_label.theme = kenney_theme
 	list_label.add_theme_font_size_override("normal_font_size", font_size)
@@ -467,7 +466,7 @@ static func viewer_text_width() -> float:
 ## A wrapped header reads as a broken word ("CATEGORI / ES"), which is worse than a
 ## slightly smaller one.
 static func fit_header_font(ceiling: int) -> int:
-	var theme_res = load(KENNEY_THEME_PATH)
+	var theme_res = UIKit.button_theme("secondary")
 	var font: Font = theme_res.default_font if theme_res != null else null
 	if font == null:
 		return VIEWER_LIST_FONT_MIN
@@ -489,7 +488,7 @@ static func fit_header_font(ceiling: int) -> int:
 ## category row fits the bar on one line. Whole-line fit, unlike the card list —
 ## these must not wrap.
 static func fit_cat_font(rows: Array) -> int:
-	var theme_res = load(KENNEY_THEME_PATH)
+	var theme_res = UIKit.button_theme("secondary")
 	var font: Font = theme_res.default_font if theme_res != null else null
 	if font == null or rows.is_empty():
 		return VIEWER_CAT_FONT_MIN
@@ -520,7 +519,7 @@ static func fit_cat_font(rows: Array) -> int:
 ## breaks a word that cannot fit instead of letting it run past the edge, which matters for exactly
 ## one card in the game ("Counterattack" needs 19pt in a 214px bar).
 static func fit_list_font(lines: Array) -> int:
-	var theme_res = load(KENNEY_THEME_PATH)
+	var theme_res = UIKit.button_theme("secondary")
 	var font : Font = theme_res.default_font if theme_res != null else null
 	if font == null:
 		return VIEWER_LIST_FONT_MIN

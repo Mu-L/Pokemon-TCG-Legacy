@@ -10,10 +10,10 @@ extends SceneTree
 #       --path "C:\Pokemon TCG Legacy" --script Scripts/Utilities/Build_UI_Themes.gd
 #
 # It writes:
-#   UI_Themes/ui/btn_*.png          — 9-patch button faces, 3 per variant
-#   UI_Themes/ui/slider_grabber.png — the volume slider's grabber disc
-#   UI_Themes/ui/ui_base.tres       — default font and colours for every Control
-#   UI_Themes/ui/ui_<variant>.tres  — one per button semantic
+#   UI_Themes/ui/<theme>/btn_*.png          — 9-patch button faces, 3 per variant
+#   UI_Themes/ui/<theme>/slider_grabber.png — the volume slider's grabber disc
+#   UI_Themes/ui/<theme>/ui_base.tres       — default font and colours for every Control
+#   UI_Themes/ui/<theme>/ui_<variant>.tres  — one per button semantic, per theme
 #
 # ── WHY THEMES PER VARIANT ───────────────────────────────────
 # The project already assigns a whole Theme to a Button to colour it (the five
@@ -48,7 +48,21 @@ extends SceneTree
 # carry Button entries and nothing else.
 # ============================================================
 
-const OUT_DIR := "res://UI_Themes/ui/"
+# ── ONE FOLDER PER THEME ─────────────────────────────────────
+# Button faces are baked PNGs, so they cannot recolour themselves at runtime the
+# way a shader-driven chrome bar can. The first build wrote one set from the
+# DEFAULT theme straight into ui/, which silently made runtime theme switching
+# impossible: every screen would have restyled its field and bars and left every
+# button sitting there in Spectrum Night's pink.
+#
+# So every theme gets its own folder, ui/<theme_id>/, holding the identical file
+# names. UIKit.style_button() picks the folder from UITheme.current. Adding a
+# theme to THEMES and re-running this is all it takes — nothing here enumerates
+# theme names.
+const OUT_ROOT := "res://UI_Themes/ui/"
+
+# The folder currently being written. Set per theme in _init().
+var OUT_DIR := OUT_ROOT
 
 # Button face texture. The patch margin has to clear the corner radius (and the
 # 5px bottom edge), and the two margins together must not exceed the shortest
@@ -90,12 +104,12 @@ var TYP: Dictionary   # TYPE
 # a gradient. Built in _init() once the tokens are loaded.
 var VARIANTS: Dictionary = {}
 
-# Text colours for the three light fills. These are contrast picks against a
-# specific button colour, NOT palette entries — good, warn and selected are all
-# light enough that white text on them is unreadable, and nothing else in the
-# game wants "the colour that reads on mint green".
-const FG_ON_GOOD := Color("0E2418")
-const FG_ON_WARN := Color("2A2010")
+# Label colours for the semantic fills are DERIVED, not listed. They used to be
+# two hand-tuned constants eyeballed against Spectrum Night's particular mint and
+# amber, which meant an incoming theme picking a pale `danger` would have got
+# unreadable white text with nothing to catch it. UITheme.ink_on() now answers
+# "what reads on this fill" for every theme, and the runtime calls the same
+# function, so a baked face and a hand-painted chip cannot disagree.
 
 # Hover and press are composited OVER the fill rather than applied to its rgb.
 # The secondary button is white at 8% alpha, so "lighten the rgb by 6%" did
@@ -110,17 +124,19 @@ const PRESS_SINK := Color(0.0, 0.0, 0.0, 0.18)
 const DISABLED_FILL := Color(0.0, 0.0, 0.0, 0.22)
 
 func _init() -> void:
-	DirAccess.make_dir_recursive_absolute(ProjectSettings.globalize_path(OUT_DIR))
-
 	var ui_theme = load(UI_THEME_SCRIPT)
 	if ui_theme == null:
 		printerr("Build_UI_Themes: cannot load ", UI_THEME_SCRIPT)
 		quit(1)
 		return
-	TOK = ui_theme.THEMES[ui_theme.DEFAULT_THEME]
+
 	MET = ui_theme.METRICS
 	TYP = ui_theme.TYPE
 
+	# Geometry and type are SHARED by every theme, so they are read once out here
+	# rather than per theme. A theme that changed a radius or a font size would
+	# change the shape of the game, which the theme contract forbids.
+	#
 	# ISSUE #184: buttons take btn_radius (the pill), not the chip radius.
 	RADIUS         = float(MET["btn_radius"])
 	TEX_MARGIN     = int(ceil(RADIUS)) + 2
@@ -128,13 +144,42 @@ func _init() -> void:
 	EDGE_H         = float(MET["btn_edge_h"])
 	PAD_H          = float(MET["btn_pad_h"])
 	PAD_V          = float(MET["btn_pad_v"])
-	BTN_EDGE_COLOR = TOK["btn_edge"]
 	FONT_UI_BOLD   = ui_theme.FONT_UI_BOLD
 	FONT_UI_MEDIUM = ui_theme.FONT_UI_MEDIUM
 	FONT_MONO      = ui_theme.FONT_MONO
 	SIZE_BUTTON    = int(round(float(TYP["button"]["size"])))
 	SIZE_BODY      = int(round(float(TYP["body"]["size"])))
 
+	var ok := true
+	var built: Array[String] = []
+	for theme_id in ui_theme.THEMES.keys():
+		ok = _build_theme(ui_theme, String(theme_id)) and ok
+		built.append(String(theme_id))
+
+	if ok:
+		print("Build_UI_Themes: wrote %d themes -> %s" % [built.size(), OUT_ROOT])
+		print("  ", ", ".join(built))
+	else:
+		printerr("Build_UI_Themes: FINISHED WITH ERRORS")
+	quit(0 if ok else 1)
+
+
+## Bakes one theme's whole folder: the button faces, the grabber, the base theme
+## and the six variant themes.
+func _build_theme(ui_theme, theme_id: String) -> bool:
+	TOK = ui_theme.THEMES[theme_id]
+	OUT_DIR = OUT_ROOT + theme_id + "/"
+	DirAccess.make_dir_recursive_absolute(ProjectSettings.globalize_path(OUT_DIR))
+
+	BTN_EDGE_COLOR = TOK["btn_edge"]
+
+	# Every fill comes from a token or from a documented derivation. Nothing here
+	# is a literal — see the note above UI_THEME_SCRIPT.
+	var selected_fill: Color = ui_theme.selection_for(TOK)
+
+	# A lift on a dark bar, a shade on a light one. UITheme owns the two alphas and
+	# why they are not symmetric; the audit reads the same function.
+	var chrome_tint: Color = ui_theme.chrome_button_tint(TOK)
 	VARIANTS = {
 		"primary": {
 			"top": TOK["btn_primary_top"], "bot": TOK["btn_primary_bot"],
@@ -144,15 +189,31 @@ func _init() -> void:
 			"top": TOK["btn_secondary"], "bot": TOK["btn_secondary"],
 			"fg": TOK["btn_secondary_fg"],
 		},
-		"selected": {
-			# The header gradient's pink rather than the lighter `accent`, which
-			# is too pale to carry white text at 17px.
-			"top": TOK["chrome_grad_b"], "bot": TOK["chrome_grad_b"],
-			"fg": Color.WHITE,
+		# ── THE SECONDARY BUTTON THAT LIVES ON A CHROME BAR ──
+		# `secondary` is a translucent tint, so unlike every other variant it has
+		# no colour of its own — it is whatever it sits ON, darkened or lightened.
+		# The theme block keys it to the FIELD, which is right for the ~90% of
+		# secondary buttons sitting in the content area and wrong for the ones in
+		# the header and footer, which sit on the bar.
+		#
+		# It only breaks when the bar and the field disagree in polarity, and five
+		# of the incoming light themes are exactly that: a pale field under a
+		# near-black bar. A black-on-black Cancel button was invisible.
+		#
+		# So there is a second baked face, keyed to the CHROME's polarity and
+		# labelled in chrome_fg. UIKit.make_footer_button() and adopt_button()
+		# select it automatically — no screen asks for it by name.
+		"secondary_chrome": {
+			"top": chrome_tint, "bot": chrome_tint,
+			"fg": TOK["chrome_fg"],
 		},
-		"good":   { "top": TOK["good"],   "bot": TOK["good"],   "fg": FG_ON_GOOD },
-		"danger": { "top": TOK["danger"], "bot": TOK["danger"], "fg": Color.WHITE },
-		"warn":   { "top": TOK["warn"],   "bot": TOK["warn"],   "fg": FG_ON_WARN },
+		"selected": {
+			"top": selected_fill, "bot": selected_fill,
+			"fg": ui_theme.ink_on(selected_fill),
+		},
+		"good":   { "top": TOK["good"],   "bot": TOK["good"],   "fg": ui_theme.ink_on(TOK["good"]) },
+		"danger": { "top": TOK["danger"], "bot": TOK["danger"], "fg": ui_theme.ink_on(TOK["danger"]) },
+		"warn":   { "top": TOK["warn"],   "bot": TOK["warn"],   "fg": ui_theme.ink_on(TOK["warn"]) },
 	}
 
 	var ok := true
@@ -161,12 +222,7 @@ func _init() -> void:
 	ok = _write_base_theme() and ok
 	for variant_name in VARIANTS.keys():
 		ok = _write_variant_theme(String(variant_name)) and ok
-
-	if ok:
-		print("Build_UI_Themes: wrote ", OUT_DIR)
-	else:
-		printerr("Build_UI_Themes: FINISHED WITH ERRORS")
-	quit(0 if ok else 1)
+	return ok
 
 
 # ─── Button face art ─────────────────────────────────────────────────────────
@@ -336,6 +392,17 @@ func _write_base_theme() -> bool:
 	t.set_stylebox("focus", "LineEdit", _text_box(TOK["chip_bg"], TOK["accent"]))
 
 	t.set_stylebox("panel", "PanelContainer", _flat(TOK["panel"], TOK["line"], 1, 15.0))
+
+	# Scrollbars. Godot's default is a flat grey that belongs to no theme, and the
+	# Options screen scrolls now, so it was the one unthemed thing on the page.
+	# The track is the slot colour and the grabber is the accent — the same pair
+	# the volume sliders use, so a scrollbar and a slider read as one family.
+	for axis in ["VScrollBar", "HScrollBar"]:
+		t.set_stylebox("scroll", axis, _flat(TOK["slot_fill"], Color(0, 0, 0, 0), 0, 5.0))
+		var grab := _flat(TOK["slot"], Color(0, 0, 0, 0), 0, 5.0)
+		t.set_stylebox("grabber", axis, grab)
+		t.set_stylebox("grabber_highlight", axis, _flat(TOK["accent"], Color(0, 0, 0, 0), 0, 5.0))
+		t.set_stylebox("grabber_pressed", axis, _flat(TOK["accent"], Color(0, 0, 0, 0), 0, 5.0))
 
 	# Sliders. The track is the same 12px/6px-radius bar make_meter() draws, so a
 	# volume slider and a progress meter read as the same object at rest.

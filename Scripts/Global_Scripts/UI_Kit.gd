@@ -107,17 +107,37 @@ class ShaderRect extends ColorRect:
 	# syncing — a slot outline has no scroll_speed uniform and nothing to stop.
 	var tracks_motion: bool = true
 
+	# ── HOW A SHADER RECT RECOLOURS ──────────────────────────
+	# `painter` is the function that pushes this rect's colour uniforms onto its
+	# material. It is stored rather than run once so a theme change can simply
+	# run it again — the alternative was every screen rebuilding its chrome, and
+	# the map sits behind the Options overlay without ever being rebuilt.
+	#
+	# Whoever builds the rect sets this. A rect with no painter still tracks its
+	# size and motion; it just will not recolour.
+	var painter: Callable = Callable()
+
 	func _ready() -> void:
 		resized.connect(_sync_size)
 		_sync_size()
 		refresh_motion()
 		var ui := get_node_or_null("/root/UITheme")
-		if ui != null and not ui.theme_changed.is_connected(refresh_motion):
-			ui.theme_changed.connect(refresh_motion)
+		if ui != null and not ui.theme_changed.is_connected(_on_theme_changed):
+			ui.theme_changed.connect(_on_theme_changed)
 
 	func _sync_size() -> void:
 		if material is ShaderMaterial:
 			(material as ShaderMaterial).set_shader_parameter("rect_size", size)
+
+	# Both halves of a theme change: the palette AND the reduce-motion state. The
+	# signal carries both because Options emits it for a motion change too.
+	func _on_theme_changed() -> void:
+		refresh_colours()
+		refresh_motion()
+
+	func refresh_colours() -> void:
+		if painter.is_valid() and material is ShaderMaterial:
+			painter.call(material as ShaderMaterial)
 
 	func refresh_motion() -> void:
 		if not tracks_motion or not (material is ShaderMaterial):
@@ -140,8 +160,74 @@ class ChromeBar extends ShaderRect:
 	var centre: Control
 	var right: Control
 
+	func _ready() -> void:
+		super()
+		_refresh_bar_paint()
+
+	func _on_theme_changed() -> void:
+		super()
+		_refresh_bar_paint()
+
+	# ── WHY THIS IS self_modulate AND NOT visible ────────────
+	# The bar's title, chips and buttons are CHILDREN of this node. `visible =
+	# false` would take them down with it, and `modulate` propagates to children
+	# too — either one would empty the bar instead of un-painting it.
+	#
+	# `self_modulate` affects only the node's OWN drawing. The gradient and its
+	# light bands disappear; every child keeps drawing in exactly the same place,
+	# at the same size, in the same colour. The bar also keeps its height, so no
+	# content anywhere on the screen moves. That is the whole of the feature: the
+	# contents appear to float over the field.
+	#
+	# Do not "improve" this by hiding the node, collapsing the container,
+	# reparenting the title into the field, or restyling anything for the
+	# no-banner case. Hiding the paint is all it does.
+	func _refresh_bar_paint() -> void:
+		var ui := get_node_or_null("/root/UITheme")
+		var hidden: bool = ui != null and ui.bars_hidden()
+		self_modulate.a = 0.0 if hidden else 1.0
+
 
 # ─── Chrome ──────────────────────────────────────────────────────────────────
+
+## Pushes the field's colours onto a material. Kept apart from add_field() so a
+## theme change can re-run it on a field that is already on screen — see
+## ShaderRect.painter.
+##
+## The band GEOMETRY is pushed here too, even though no theme changes it. It
+## costs nothing and it means one function is the whole answer to "what does the
+## field shader need", rather than the colours living here and the geometry
+## living at the call site where a later edit would miss it.
+static func paint_field(mat: ShaderMaterial) -> void:
+	var ui := _ui()
+	mat.set_shader_parameter("base_color", ui.col("field"))
+	mat.set_shader_parameter("wash_left", ui.col("field_glow_left"))
+	mat.set_shader_parameter("wash_right", ui.col("field_glow_right"))
+	mat.set_shader_parameter("tint_top", ui.col("field_glow_top"))
+	mat.set_shader_parameter("tint_bottom", ui.col("field_glow_bottom"))
+	mat.set_shader_parameter("stripe_color", ui.col("field_texture"))
+	mat.set_shader_parameter("angle_deg", ui.CHEVRON_ANGLE_DEG)
+	mat.set_shader_parameter("stripe_width", ui.CHEVRON_FIELD_STRIPE)
+	mat.set_shader_parameter("period", ui.CHEVRON_FIELD_PERIOD)
+
+
+## The chrome bar equivalent of paint_field().
+##
+## `line_at_bottom` is not a theme value — it says which edge of THIS bar faces
+## the content, so the header rules along its bottom and the footer along its top.
+static func paint_bar(mat: ShaderMaterial, line_at_bottom: bool = true) -> void:
+	var ui := _ui()
+	mat.set_shader_parameter("grad_a", ui.col("chrome_grad_a"))
+	mat.set_shader_parameter("grad_b", ui.col("chrome_grad_b"))
+	mat.set_shader_parameter("grad_c", ui.col("chrome_grad_c"))
+	mat.set_shader_parameter("stripe_color", ui.col("chrome_pattern"))
+	mat.set_shader_parameter("angle_deg", ui.CHEVRON_ANGLE_DEG)
+	mat.set_shader_parameter("stripe_width", ui.CHEVRON_BAR_STRIPE)
+	mat.set_shader_parameter("period", ui.CHEVRON_BAR_PERIOD)
+	mat.set_shader_parameter("line_color", ui.col("chrome_line"))
+	mat.set_shader_parameter("line_px", ui.CHROME_LINE_PX)
+	mat.set_shader_parameter("line_at_bottom", line_at_bottom)
+
 
 ## The dark ground a screen sits on. Add it FIRST — it anchors to the full rect
 ## and sits at Z_FIELD, so anything added afterwards draws over it.
@@ -156,16 +242,9 @@ static func add_field(parent: Control) -> ShaderRect:
 	var mat := ShaderMaterial.new()
 	mat.shader = load(SHADER_FIELD)
 	var ui := _ui()
-	mat.set_shader_parameter("base_color", ui.col("field"))
-	mat.set_shader_parameter("wash_left", ui.col("field_glow_left"))
-	mat.set_shader_parameter("wash_right", ui.col("field_glow_right"))
-	mat.set_shader_parameter("tint_top", ui.col("field_glow_top"))
-	mat.set_shader_parameter("tint_bottom", ui.col("field_glow_bottom"))
-	mat.set_shader_parameter("stripe_color", ui.col("field_texture"))
-	mat.set_shader_parameter("angle_deg", ui.CHEVRON_ANGLE_DEG)
-	mat.set_shader_parameter("stripe_width", ui.CHEVRON_FIELD_STRIPE)
-	mat.set_shader_parameter("period", ui.CHEVRON_FIELD_PERIOD)
+	rect.painter = paint_field
 	rect.material = mat
+	paint_field(mat)
 
 	# Negative: the field scrolls LEFT while the bars scroll RIGHT. The
 	# counter-motion is the point — it is what stops a static board feeling dead.
@@ -211,14 +290,11 @@ static func _add_bar(parent: Control, bar_h: float, at_top: bool) -> ChromeBar:
 
 	var mat := ShaderMaterial.new()
 	mat.shader = load(SHADER_CHROME)
-	mat.set_shader_parameter("grad_a", ui.col("chrome_grad_a"))
-	mat.set_shader_parameter("grad_b", ui.col("chrome_grad_b"))
-	mat.set_shader_parameter("grad_c", ui.col("chrome_grad_c"))
-	mat.set_shader_parameter("stripe_color", ui.col("chrome_pattern"))
-	mat.set_shader_parameter("angle_deg", ui.CHEVRON_ANGLE_DEG)
-	mat.set_shader_parameter("stripe_width", ui.CHEVRON_BAR_STRIPE)
-	mat.set_shader_parameter("period", ui.CHEVRON_BAR_PERIOD)
+	# The keyline goes on whichever edge faces the content, so the painter has to
+	# remember which bar this is.
+	bar.painter = func(m: ShaderMaterial) -> void: paint_bar(m, at_top)
 	bar.material = mat
+	paint_bar(mat, at_top)
 	bar.base_speed = ui.CHEVRON_BAR_LOOP / ui.CHEVRON_BAR_TIME   # positive: RIGHT
 
 	# Three columns: left (1fr) | centre (auto) | right (1fr).
@@ -309,7 +385,7 @@ static func convert_legacy_screen(root: Control, title: String) -> Dictionary:
 	# picks up the new face without a per-node override. Anything that still
 	# assigns its own Theme in the scene keeps winning, which is what the button
 	# variants rely on.
-	root.theme = load("res://UI_Themes/ui/ui_base.tres")
+	root.theme = base_theme()
 
 	var old_bg := root.get_node_or_null("BACKGROUND")
 	if old_bg != null:
@@ -376,7 +452,7 @@ static func adopt_button(button: Button, slot: Control, variant: String,
 	button.offset_bottom = 0.0
 	button.custom_minimum_size = Vector2.ZERO
 	button.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-	style_button(button, variant)
+	style_button(button, on_chrome(variant))
 	if footer_width:
 		button.custom_minimum_size.x = FOOTER_BTN_W
 	slot.add_child(button)
@@ -444,8 +520,12 @@ static func make_chip(text: String, variant: String = "on_field",
 	var fg: Color
 	match variant:
 		"on_chrome":
-			sb.bg_color = Color(1.0, 1.0, 1.0, 0.10)
-			fg = ui.col("chrome_fg")
+			# The tint and the ink both follow the bars: with the bars hidden this
+			# chip is sitting on the field, so a white wash under white text would
+			# be two invisible things stacked. See visible_colour().
+			var on_light_field: bool = ui.bars_hidden() and ui.luminance(ui.col("field")) >= 0.5
+			sb.bg_color = Color(0.0, 0.0, 0.0, 0.10) if on_light_field else Color(1.0, 1.0, 1.0, 0.10)
+			fg = ui.col(visible_colour("chrome_fg"))
 		"status":
 			sb.bg_color = ui.status_colour(status_code if status_code != "" else text)
 			fg = Color.WHITE
@@ -485,13 +565,19 @@ static func make_slot(slot_size: Vector2, circular: bool = false) -> ShaderRect:
 
 	var mat := ShaderMaterial.new()
 	mat.shader = load(SHADER_SLOT)
-	mat.set_shader_parameter("fill_color", ui.col("slot_fill"))
-	mat.set_shader_parameter("outline_color", ui.col("slot"))
-	mat.set_shader_parameter("outline_px", ui.m("slot_outline"))
-	# The shader clamps to half the short edge, so a big number is a circle.
-	mat.set_shader_parameter("corner_radius", 9999.0 if circular else ui.m("slot_radius"))
-	mat.set_shader_parameter("rect_size", slot_size)
+	# The shader clamps to half the short edge, so a big number is a circle. The
+	# radius is captured here rather than re-derived by the painter, because
+	# `circular` is the caller's choice and not a theme value.
+	var radius: float = 9999.0 if circular else ui.m("slot_radius")
+	s.painter = func(m: ShaderMaterial) -> void:
+		var t := _ui()
+		m.set_shader_parameter("fill_color", t.col("slot_fill"))
+		m.set_shader_parameter("outline_color", t.col("slot"))
+		m.set_shader_parameter("outline_px", t.m("slot_outline"))
+		m.set_shader_parameter("corner_radius", radius)
 	s.material = mat
+	s.painter.call(mat)
+	mat.set_shader_parameter("rect_size", slot_size)
 	return s
 
 
@@ -715,7 +801,7 @@ static func style_label(label: Label, role: String, colour_key: String = "field_
 
 	label.add_theme_font_override("font", ui.font(role))
 	label.add_theme_font_size_override("font_size", ui.size(role) if size_px < 0 else size_px)
-	label.add_theme_color_override("font_color", ui.col(colour_key))
+	label.add_theme_color_override("font_color", ui.col(visible_colour(colour_key)))
 	var track: int = ui.tracking_px(role)
 	if track != 0:
 		label.add_theme_constant_override("font_spacing_glyph", track)
@@ -752,15 +838,105 @@ static func set_label(label: Label, role: String, text: String,
 ##
 ## Anything destructive is behind a confirm dialog, so there is nothing here a
 ## press-to-fire button can do that a release-to-fire one could not.
+## Translates a colour key for text that sits ON A CHROME BAR.
+##
+## With the bars hidden, anything painted in `chrome_fg` is no longer on a bar —
+## it is on the FIELD, and `chrome_fg` is white in every theme, so on the light
+## themes the screen title and every bar chip became invisible.
+##
+## Position, size, face and tracking are untouched. Only the ink changes, and
+## only while the bars are hidden. That is the whole of it.
+static func visible_colour(colour_key: String) -> String:
+	if colour_key == "chrome_fg" and _ui().bars_hidden():
+		return "field_fg"
+	return colour_key
+
+
+## Translates a button variant for a button that sits ON A CHROME BAR.
+##
+## Only `secondary` changes, and only because it is the one translucent variant:
+## it has no colour of its own, so it is whatever it sits on, lightened or
+## darkened. The theme keys it to the FIELD, which is right in the content area
+## and wrong on a bar — and the two disagree on any theme pairing a pale field
+## with a near-black bar, where a Cancel button came out black on black.
+##
+## Every other variant is an opaque fill and reads the same wherever it sits.
+##
+## Called by adopt_button() and make_footer_button(), which are the only two ways
+## a button gets into a bar. No screen names the chrome variant itself.
+## With the bars hidden the button is sitting on the FIELD, so the ordinary
+## secondary face — which is keyed to the field — is the correct one again.
+static func on_chrome(variant: String) -> String:
+	if variant != "secondary":
+		return variant
+	return "secondary" if _ui().bars_hidden() else "secondary_chrome"
+
+
+## The baked Theme for one button variant in the CURRENT theme.
+##
+## For the handful of places that assign `node.theme` themselves rather than
+## calling style_button — a card tile that wants the secondary face as a panel,
+## a popup built before UIKit existed. Those used to hardcode
+## "res://UI_Themes/ui/ui_secondary.tres", which pinned them to whatever theme
+## was baked last and would have left them un-themed forever. There is no path
+## literal outside this file any more; keep it that way.
+static func button_theme(variant: String = "secondary") -> Theme:
+	var ui := _ui()
+	var t: Theme = load("res://UI_Themes/ui/%s/ui_%s.tres" % [ui.current, variant])
+	if t == null:
+		push_error("UIKit: no button theme '%s' for theme '%s' — run Build_UI_Themes.gd"
+			% [variant, ui.current])
+	return t
+
+
+## The screen-root Theme for the current theme: fonts, sizes and the neutral
+## colours every Control inherits by walking up the tree.
+static func base_theme() -> Theme:
+	var ui := _ui()
+	return load("res://UI_Themes/ui/%s/ui_base.tres" % ui.current)
+
+
+## ── THE VARIANT IS REMEMBERED ────────────────────────────────
+## The button's face is BAKED ART, one folder per theme, so it cannot recolour
+## itself when the theme changes the way a shader-driven bar can — it has to be
+## pointed at a different .tres. `set_meta` records which variant this button was
+## last given so restyle_buttons() can repoint it without every caller having to
+## remember. Never set a button's `theme` by hand; go through here.
 static func style_button(button: Button, variant: String = "secondary") -> void:
-	var path := "res://UI_Themes/ui/ui_%s.tres" % variant
+	var ui := _ui()
+	var path := "res://UI_Themes/ui/%s/ui_%s.tres" % [ui.current, variant]
 	var t: Theme = load(path)
 	if t == null:
-		push_error("UIKit: no button theme '" + variant + "' — run Build_UI_Themes.gd")
+		push_error("UIKit: no button theme '%s' for theme '%s' — run Build_UI_Themes.gd"
+			% [variant, ui.current])
 		return
 	button.theme = t
+	button.set_meta("ui_variant", variant)
 	button.action_mode = BaseButton.ACTION_MODE_BUTTON_PRESS
-	button.text = _ui().cased("button", button.text)
+	button.text = ui.cased("button", button.text)
+
+
+## Repoints every Button under `root` at the current theme's baked art, keeping
+## whichever variant each one already had. This is what a screen calls when the
+## theme changes under it.
+##
+## A Button that never went through style_button() carries no variant meta and is
+## left alone — that is deliberate, because the only such buttons are ones
+## painting their own face for a reason (the boot splash's two).
+static func restyle_buttons(root: Node) -> void:
+	for node in _walk(root):
+		if node is Button and node.has_meta("ui_variant"):
+			var b := node as Button
+			var was := b.text            # style_button re-cases, which is idempotent
+			style_button(b, String(b.get_meta("ui_variant")))
+			b.text = was
+
+
+static func _walk(node: Node) -> Array[Node]:
+	var out: Array[Node] = [node]
+	for child in node.get_children():
+		out.append_array(_walk(child))
+	return out
 
 
 ## ISSUE #253: hold a set of controls DEAD until the work they started is on
@@ -787,13 +963,25 @@ static func hold_buttons(buttons: Array, held: bool) -> void:
 
 ## ISSUE #254: THE selection colour — the one "this is on" fill in the game.
 ##
-## It is the `selected` button variant's own fill (chrome_grad_b), so anything
-## that has to paint a selected state by hand — a locked-on filter chip, a type
-## chip that carries its own colour when idle — comes out the same pink as the
-## Options buttons, and a theme swap moves every one of them together. Green is
-## reserved for save/confirm and must not be used to mean "selected".
+## It is the `selected` button variant's own fill, so anything that has to paint
+## a selected state by hand — a locked-on filter chip, a type chip that carries
+## its own colour when idle — comes out the same colour as the Options buttons,
+## and a theme swap moves every one of them together. Green is reserved for
+## save/confirm and must not be used to mean "selected".
+##
+## Normally the header gradient's middle stop, but a theme with a dark or
+## desaturated chrome bar falls back to its accent — UITheme.selection_for()
+## owns that decision and Build_UI_Themes.gd bakes the button face from the same
+## call, so the two can never disagree.
 static func selection_colour() -> Color:
-	return _ui().col("chrome_grad_b")
+	var ui := _ui()
+	return ui.selection_for(ui.THEMES[ui.current])
+
+
+## The text colour that reads on an arbitrary fill. Mirrors what the baked button
+## art does for good / warn / danger / selected.
+static func ink_on(fill: Color) -> Color:
+	return _ui().ink_on(fill)
 
 
 ## A footer action button — Cancel, Save, Buy, Close, Confirm.
@@ -804,7 +992,7 @@ static func selection_colour() -> Color:
 static func make_footer_button(text: String, variant: String = "secondary") -> Button:
 	var b := Button.new()
 	b.text = text
-	style_button(b, variant)
+	style_button(b, on_chrome(variant))
 	b.custom_minimum_size.x = FOOTER_BTN_W
 	return b
 

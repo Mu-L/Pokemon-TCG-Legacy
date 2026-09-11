@@ -61,130 +61,937 @@ const FONT_SYMBOL_FALLBACK := "C:/Windows/Fonts/seguisym.ttf"
 # deliberately not derived from one another: Spectrum has a light field, where
 # the alpha-white panel/line/slot/chip tokens would vanish and locked-item
 # silhouettes must not be inverted, so each theme states its own.
+#
+# ── THE BUTTON RULE ──────────────────────────────────────────
+# Written down because the first pass invented button colours per theme and the
+# result did not line up: Spectrum Night's primary was a dull magenta belonging
+# to no other element, and its secondary was twice the strength of the same
+# button on the boot splash. A NEW THEME MUST FOLLOW THIS.
+#
+#   primary    A gradient from the theme's SIGNATURE stop down to its DEEP stop.
+#              Where the chrome bar carries real colour, those are literally
+#              chrome_grad_b over chrome_grad_a — Spectrum Night's confirm
+#              button is now the header bar's own pink over its own purple.
+#              Where the chrome bar is deliberately unsaturated (dusk's near
+#              black, circuit's flat panel) there is no signature stop to borrow,
+#              so primary derives from `accent` instead: a mid-strength version
+#              of the accent over a darkened one. Never a colour that appears
+#              nowhere else.
+#
+#   secondary  A flat 10% tint of the FIELD's own polarity — white at 0.10 on a
+#              dark field, black at 0.10 on a light one — with a label that is
+#              NOT pure white. A secondary whose label matches primary's exactly
+#              stops reading as the lesser of the two choices. The boot splash's
+#              New Game button takes this same face, so the pair the player sees
+#              first is the pair they see everywhere after.
+#
+#   The gradient-versus-flat difference is what keeps primary apart from the
+#   `selected` variant, which is flat chrome_grad_b. Do not give primary a flat
+#   fill or the two collapse into each other.
 const THEMES := {
-	"spectrum_night": {
-		# Chrome — the header and footer bars
-		"chrome_grad_a":     Color("7B3FD4"),   # 0%
-		"chrome_grad_b":     Color("E8459B"),   # 52%
-		"chrome_grad_c":     Color("F5793B"),   # 100%
-		"chrome_fg":         Color("FFFFFF"),
-		"chrome_pattern":    Color(1.0, 1.0, 1.0, 0.06),
+	# Eight looks, each in a Dark and a Light variant. Every block is 39 keys in
+	# the order Docs/THEME_TEMPLATE_SPEC.md lays out, and every one is checked by
+	# Scripts/Utilities/Theme_Audit.gd. Add a theme here, re-run the builder, then
+	# re-run the audit; nothing else enumerates theme names.
+	#
+	# Four of the eight bars are FLAT — grad_a == grad_b == grad_c. That is not an
+	# oversight: those designs have no gradient, and setting the three stops equal
+	# expresses it without needing a key to say so.
 
+	"sunset_dark": {
+
+		# Chrome — the header and footer bars
+		"chrome_grad_a":      Color("7B3FD4"),
+		"chrome_grad_b":      Color("DE1C82"),
+		"chrome_grad_c":      Color("CD4B0A"),
+		"chrome_fg":          Color("FFFFFF"),
+		"chrome_pattern":     Color(1.000, 1.000, 1.000, 0.060),
+		"chrome_line":        Color(0.0, 0.0, 0.0, 0.0),
 		# Field — the play area / content background
-		"field":             Color("171126"),
-		"field_glow_top":    Color(0.910, 0.271, 0.608, 0.18),   # E8459B @18%
-		"field_glow_bottom": Color(0.961, 0.475, 0.231, 0.16),   # F5793B @16%
-		"field_glow_left":   Color("241740"),
-		"field_glow_right":  Color("3A1533"),
-		"field_texture":     Color(1.0, 1.0, 1.0, 0.026),
-		"field_fg":          Color("F4EDFA"),
-		"field_mute":        Color("C9BBE0"),
+		"field":              Color("171126"),
+		"field_glow_top":     Color(0.910, 0.271, 0.608, 0.180),
+		"field_glow_bottom":  Color(0.961, 0.475, 0.231, 0.160),
+		"field_glow_left":    Color("241740"),
+		"field_glow_right":   Color("3A1533"),
+		"field_texture":      Color(1.000, 1.000, 1.000, 0.026),
+		"field_fg":           Color("F4EDFA"),
+		"field_mute":         Color("A493C4"),
 
 		# Surfaces and lines
-		"panel":             Color(1.0, 1.0, 1.0, 0.065),
-		"line":              Color(1.0, 1.0, 1.0, 0.14),
-		"slot":              Color(1.0, 1.0, 1.0, 0.16),
-		"slot_fill":         Color(1.0, 1.0, 1.0, 0.03),
-		"chip_bg":           Color(0.078, 0.047, 0.133, 0.62),   # 140C22 @62%
-		"chip_line":         Color(1.0, 1.0, 1.0, 0.18),
-		"chip_fg":           Color("E7DCF5"),
+		"panel":              Color(1.000, 1.000, 1.000, 0.065),
+		"line":               Color(1.000, 1.000, 1.000, 0.140),
+		"slot":               Color(1.000, 1.000, 1.000, 0.160),
+		"slot_fill":          Color(1.000, 1.000, 1.000, 0.030),
+		"chip_bg":            Color(0.078, 0.047, 0.133, 0.620),
+		"chip_line":          Color(1.000, 1.000, 1.000, 0.180),
+		"chip_fg":            Color("E7DCF5"),
 
 		# Accents and semantics
-		"accent":            Color("FF7FC4"),   # player side, payable, selection, active
-		"accent_2":          Color("FFA45C"),   # opponent side, powers, damage blocks
-		"good":              Color("67D79B"),   # remaining HP, prices, confirm
-		"danger":            Color("E5484D"),   # destructive actions (was kenneyUI-red)
-		"warn":              Color("EFC44F"),   # toggle-on state (was kenneyUI-yellow)
+		"accent":             Color("FF7FC4"),
+		"accent_2":           Color("FFA45C"),
+		"good":               Color("67D79B"),
+		"danger":             Color("EF6065"),
+		"warn":               Color("EFC44F"),
 
-		# Status conditions. PSN and CNF come from the spec; the other three are
-		# added because the match engine has five conditions, not two.
-		"status_psn":        Color("C93A9B"),
-		"status_cnf":        Color("E07A2E"),
-		"status_par":        Color("D8A82A"),
-		"status_asl":        Color("6E7BC4"),
-		"status_brn":        Color("E2603A"),
+		# Status conditions
+		"status_psn":         Color("C93A9B"),
+		"status_cnf":         Color("E07A2E"),
+		"status_par":         Color("D8A82A"),
+		"status_asl":         Color("6E7BC4"),
+		"status_brn":         Color("E2603A"),
 
 		# Buttons
-		"btn_primary_top":   Color("B4459B"),
-		"btn_primary_bot":   Color("7B3FD4"),
-		"btn_primary_fg":    Color("FFFFFF"),
-		"btn_secondary":     Color(1.0, 1.0, 1.0, 0.16),
-		"btn_secondary_fg":  Color("FFFFFF"),
-		"btn_edge":          Color(0.0, 0.0, 0.0, 0.30),
+		"btn_primary_top":    Color("E8459B"),
+		"btn_primary_bot":    Color("7B3FD4"),
+		"btn_primary_fg":     Color("FFFFFF"),
+		"btn_secondary":      Color(1.000, 1.000, 1.000, 0.100),
+		"btn_secondary_fg":   Color("D9CBEC"),
+		"btn_edge":           Color(0.000, 0.000, 0.000, 0.300),
 
-		# Locked collection tiles. False means "draw the silhouette as-is";
-		# a light field would need it inverted so it stays visible.
-		"silhouette_invert": false,
-		"silhouette_alpha":  0.34,
+		# Locked collection tiles
+		"silhouette_invert":  false,
+		"silhouette_alpha":   0.34,
 	},
 
-	# ── Parked. Present so the dictionary shape is proven, not reachable. ──
-	"spectrum": {
-		"chrome_grad_a": Color("7B3FD4"), "chrome_grad_b": Color("E8459B"), "chrome_grad_c": Color("F5793B"),
-		"chrome_fg": Color("FFFFFF"), "chrome_pattern": Color(1.0, 1.0, 1.0, 0.06),
-		"field": Color("F4F1F8"),
-		"field_glow_top": Color(0.953, 0.894, 0.984, 1.0), "field_glow_bottom": Color(1.0, 0.906, 0.863, 1.0),
-		"field_glow_left": Color("F3E4FB"), "field_glow_right": Color("FFE7DC"),
-		"field_texture": Color(0.0, 0.0, 0.0, 0.030),
-		"field_fg": Color("1E1729"), "field_mute": Color("6B6180"),
-		"panel": Color(0.0, 0.0, 0.0, 0.045), "line": Color(0.0, 0.0, 0.0, 0.12),
-		"slot": Color(0.0, 0.0, 0.0, 0.16), "slot_fill": Color(0.0, 0.0, 0.0, 0.03),
-		"chip_bg": Color(1.0, 1.0, 1.0, 0.72), "chip_line": Color(0.0, 0.0, 0.0, 0.14),
-		"chip_fg": Color("2A2136"),
-		"accent": Color("D63C8F"), "accent_2": Color("E07A2E"), "good": Color("2F9E68"),
-		"danger": Color("D03439"), "warn": Color("C79A1E"),
-		"status_psn": Color("C93A9B"), "status_cnf": Color("E07A2E"), "status_par": Color("D8A82A"),
-		"status_asl": Color("6E7BC4"), "status_brn": Color("E2603A"),
-		"btn_primary_top": Color("B4459B"), "btn_primary_bot": Color("7B3FD4"), "btn_primary_fg": Color("FFFFFF"),
-		"btn_secondary": Color(0.0, 0.0, 0.0, 0.07), "btn_secondary_fg": Color("3A3048"),
-		"btn_edge": Color(0.0, 0.0, 0.0, 0.22),
-		"silhouette_invert": true, "silhouette_alpha": 0.30,
+	"sunset_light": {
+
+		# Chrome — the header and footer bars
+		"chrome_grad_a":      Color("7B3FD4"),
+		"chrome_grad_b":      Color("DE1C82"),
+		"chrome_grad_c":      Color("CD4B0A"),
+		"chrome_fg":          Color("FFFFFF"),
+		"chrome_pattern":     Color(1.000, 1.000, 1.000, 0.060),
+		"chrome_line":        Color(0.0, 0.0, 0.0, 0.0),
+		# Field — the play area / content background
+		"field":              Color("F4F1F8"),
+		"field_glow_top":     Color(0.910, 0.271, 0.608, 0.100),
+		"field_glow_bottom":  Color(0.961, 0.475, 0.231, 0.090),
+		"field_glow_left":    Color("F3E4FB"),
+		"field_glow_right":   Color("FFE7DC"),
+		"field_texture":      Color(0.471, 0.353, 0.627, 0.040),
+		"field_fg":           Color("1E1729"),
+		"field_mute":         Color("6B6180"),
+
+		# Surfaces and lines
+		"panel":              Color(0.000, 0.000, 0.000, 0.055),
+		"line":               Color(0.000, 0.000, 0.000, 0.150),
+		"slot":               Color(0.000, 0.000, 0.000, 0.180),
+		"slot_fill":          Color(0.000, 0.000, 0.000, 0.040),
+		"chip_bg":            Color(1.000, 1.000, 1.000, 0.850),
+		"chip_line":          Color(0.000, 0.000, 0.000, 0.200),
+		"chip_fg":            Color("4A3866"),
+
+		# Accents and semantics
+		"accent":             Color("B4327A"),
+		"accent_2":           Color("C4531B"),
+		"good":               Color("16744A"),
+		"danger":             Color("BC2126"),
+		"warn":               Color("856208"),
+
+		# Status conditions
+		"status_psn":         Color("C93A9B"),
+		"status_cnf":         Color("E07A2E"),
+		"status_par":         Color("D8A82A"),
+		"status_asl":         Color("6E7BC4"),
+		"status_brn":         Color("E2603A"),
+
+		# Buttons
+		"btn_primary_top":    Color("E8459B"),
+		"btn_primary_bot":    Color("7B3FD4"),
+		"btn_primary_fg":     Color("FFFFFF"),
+		"btn_secondary":      Color(0.000, 0.000, 0.000, 0.100),
+		"btn_secondary_fg":   Color("4A3866"),
+		"btn_edge":           Color(0.000, 0.000, 0.000, 0.300),
+
+		# Locked collection tiles
+		"silhouette_invert":  true,
+		"silhouette_alpha":   0.32,
 	},
-	"dusk": {
-		"chrome_grad_a": Color("241B3A"), "chrome_grad_b": Color("2F1F45"), "chrome_grad_c": Color("3A2450"),
-		"chrome_fg": Color("FFFFFF"), "chrome_pattern": Color(1.0, 1.0, 1.0, 0.06),
-		"field": Color("1A1630"),
-		"field_glow_top": Color(0.941, 0.627, 0.235, 0.06), "field_glow_bottom": Color(0.941, 0.627, 0.235, 0.13),
-		"field_glow_left": Color("241740"), "field_glow_right": Color("2A1E3C"),
-		"field_texture": Color(1.0, 1.0, 1.0, 0.026),
-		"field_fg": Color("EFEAF7"), "field_mute": Color("9C90B8"),
-		"panel": Color(1.0, 1.0, 1.0, 0.065), "line": Color(1.0, 1.0, 1.0, 0.14),
-		"slot": Color(1.0, 1.0, 1.0, 0.16), "slot_fill": Color(1.0, 1.0, 1.0, 0.03),
-		"chip_bg": Color(0.078, 0.047, 0.133, 0.62), "chip_line": Color(1.0, 1.0, 1.0, 0.18),
-		"chip_fg": Color("E7DCF5"),
-		"accent": Color("F0A03C"), "accent_2": Color("D98A5A"), "good": Color("67D79B"),
-		"danger": Color("E5484D"), "warn": Color("EFC44F"),
-		"status_psn": Color("C93A9B"), "status_cnf": Color("E07A2E"), "status_par": Color("D8A82A"),
-		"status_asl": Color("6E7BC4"), "status_brn": Color("E2603A"),
-		"btn_primary_top": Color("C0803A"), "btn_primary_bot": Color("8A5A2A"), "btn_primary_fg": Color("FFFFFF"),
-		"btn_secondary": Color(1.0, 1.0, 1.0, 0.08), "btn_secondary_fg": Color("D9CBEC"),
-		"btn_edge": Color(0.0, 0.0, 0.0, 0.30),
-		"silhouette_invert": false, "silhouette_alpha": 0.34,
+
+	"tide_dark": {
+
+		# Chrome — the header and footer bars
+		"chrome_grad_a":      Color("4B4BDD"),
+		"chrome_grad_b":      Color("16828C"),
+		"chrome_grad_c":      Color("248724"),
+		"chrome_fg":          Color("FFFFFF"),
+		"chrome_pattern":     Color(1.000, 1.000, 1.000, 0.060),
+		"chrome_line":        Color(0.0, 0.0, 0.0, 0.0),
+		# Field — the play area / content background
+		"field":              Color("152728"),
+		"field_glow_top":     Color(0.294, 0.294, 0.867, 0.180),
+		"field_glow_bottom":  Color(0.208, 0.761, 0.208, 0.160),
+		"field_glow_left":    Color("182042"),
+		"field_glow_right":   Color("162A16"),
+		"field_texture":      Color(1.000, 1.000, 1.000, 0.026),
+		"field_fg":           Color("F1F8F8"),
+		"field_mute":         Color("A2C1C3"),
+
+		# Surfaces and lines
+		"panel":              Color(1.000, 1.000, 1.000, 0.065),
+		"line":               Color(1.000, 1.000, 1.000, 0.140),
+		"slot":               Color(1.000, 1.000, 1.000, 0.160),
+		"slot_fill":          Color(1.000, 1.000, 1.000, 0.030),
+		"chip_bg":            Color(0.055, 0.102, 0.106, 0.620),
+		"chip_line":          Color(1.000, 1.000, 1.000, 0.180),
+		"chip_fg":            Color("D7E9EA"),
+
+		# Accents and semantics
+		"accent":             Color("7BE0EA"),
+		"accent_2":           Color("86DF86"),
+		"good":               Color("67D79B"),
+		"danger":             Color("EF6065"),
+		"warn":               Color("EFC44F"),
+
+		# Status conditions
+		"status_psn":         Color("C93A9B"),
+		"status_cnf":         Color("E07A2E"),
+		"status_par":         Color("D8A82A"),
+		"status_asl":         Color("6E7BC4"),
+		"status_brn":         Color("E2603A"),
+
+		# Buttons
+		"btn_primary_top":    Color("16838C"),
+		"btn_primary_bot":    Color("4B4BDD"),
+		"btn_primary_fg":     Color("FFFFFF"),
+		"btn_secondary":      Color(1.000, 1.000, 1.000, 0.100),
+		"btn_secondary_fg":   Color("CCDFE0"),
+		"btn_edge":           Color(0.000, 0.000, 0.000, 0.300),
+
+		# Locked collection tiles
+		"silhouette_invert":  false,
+		"silhouette_alpha":   0.34,
 	},
-	"circuit": {
-		"chrome_grad_a": Color("05070C"), "chrome_grad_b": Color("05070C"), "chrome_grad_c": Color("05070C"),
-		"chrome_fg": Color("DFF7F5"), "chrome_pattern": Color(0.0, 0.898, 0.831, 0.10),
-		"field": Color("06090F"),
-		"field_glow_top": Color(0.0, 0.898, 0.831, 0.05), "field_glow_bottom": Color(0.0, 0.898, 0.831, 0.05),
-		"field_glow_left": Color("06090F"), "field_glow_right": Color("06090F"),
-		"field_texture": Color(0.0, 0.898, 0.831, 0.055),
-		"field_fg": Color("DFF7F5"), "field_mute": Color("7FA6B2"),
-		"panel": Color(0.0, 0.898, 0.831, 0.05), "line": Color(0.0, 0.898, 0.831, 0.20),
-		"slot": Color(0.0, 0.898, 0.831, 0.22), "slot_fill": Color(0.0, 0.898, 0.831, 0.03),
-		"chip_bg": Color(0.02, 0.03, 0.05, 0.72), "chip_line": Color(0.0, 0.898, 0.831, 0.26),
-		"chip_fg": Color("DFF7F5"),
-		"accent": Color("00E5D4"), "accent_2": Color("4FD0E5"), "good": Color("3FD98A"),
-		"danger": Color("FF5A63"), "warn": Color("E5C14F"),
-		"status_psn": Color("C93A9B"), "status_cnf": Color("E07A2E"), "status_par": Color("D8A82A"),
-		"status_asl": Color("6E7BC4"), "status_brn": Color("E2603A"),
-		"btn_primary_top": Color("0C8E86"), "btn_primary_bot": Color("065550"), "btn_primary_fg": Color("DFF7F5"),
-		"btn_secondary": Color(0.0, 0.898, 0.831, 0.07), "btn_secondary_fg": Color("A9D9D5"),
-		"btn_edge": Color(0.0, 0.0, 0.0, 0.35),
-		"silhouette_invert": false, "silhouette_alpha": 0.34,
+
+	"tide_light": {
+
+		# Chrome — the header and footer bars
+		"chrome_grad_a":      Color("4B4BDD"),
+		"chrome_grad_b":      Color("16828C"),
+		"chrome_grad_c":      Color("248724"),
+		"chrome_fg":          Color("FFFFFF"),
+		"chrome_pattern":     Color(1.000, 1.000, 1.000, 0.060),
+		"chrome_line":        Color(0.0, 0.0, 0.0, 0.0),
+		# Field — the play area / content background
+		"field":              Color("F0F9F9"),
+		"field_glow_top":     Color(0.294, 0.294, 0.867, 0.090),
+		"field_glow_bottom":  Color(0.208, 0.761, 0.208, 0.080),
+		"field_glow_left":    Color("E2E4FB"),
+		"field_glow_right":   Color("E6F7E6"),
+		"field_texture":      Color(0.212, 0.467, 0.490, 0.050),
+		"field_fg":           Color("112527"),
+		"field_mute":         Color("4E7174"),
+
+		# Surfaces and lines
+		"panel":              Color(0.000, 0.000, 0.000, 0.055),
+		"line":               Color(0.000, 0.000, 0.000, 0.150),
+		"slot":               Color(0.000, 0.000, 0.000, 0.180),
+		"slot_fill":          Color(0.000, 0.000, 0.000, 0.040),
+		"chip_bg":            Color(1.000, 1.000, 1.000, 0.850),
+		"chip_line":          Color(0.000, 0.000, 0.000, 0.200),
+		"chip_fg":            Color("366063"),
+
+		# Accents and semantics
+		"accent":             Color("1DA3AF"),
+		"accent_2":           Color("29A329"),
+		"good":               Color("16744A"),
+		"danger":             Color("BC2126"),
+		"warn":               Color("856208"),
+
+		# Status conditions
+		"status_psn":         Color("C93A9B"),
+		"status_cnf":         Color("E07A2E"),
+		"status_par":         Color("D8A82A"),
+		"status_asl":         Color("6E7BC4"),
+		"status_brn":         Color("E2603A"),
+
+		# Buttons
+		"btn_primary_top":    Color("16838C"),
+		"btn_primary_bot":    Color("4B4BDD"),
+		"btn_primary_fg":     Color("FFFFFF"),
+		"btn_secondary":      Color(0.000, 0.000, 0.000, 0.100),
+		"btn_secondary_fg":   Color("366063"),
+		"btn_edge":           Color(0.000, 0.000, 0.000, 0.300),
+
+		# Locked collection tiles
+		"silhouette_invert":  true,
+		"silhouette_alpha":   0.32,
+	},
+
+	"canopy_dark": {
+
+		# Chrome — the header and footer bars
+		"chrome_grad_a":      Color("2DA99F"),
+		"chrome_grad_b":      Color("4BAE37"),
+		"chrome_grad_c":      Color("EDBA21"),
+		"chrome_fg":          Color("10131A"),
+		"chrome_pattern":     Color(1.000, 1.000, 1.000, 0.060),
+		"chrome_line":        Color(0.0, 0.0, 0.0, 0.0),
+		# Field — the play area / content background
+		"field":              Color("182815"),
+		"field_glow_top":     Color(0.176, 0.663, 0.624, 0.180),
+		"field_glow_bottom":  Color(0.929, 0.729, 0.129, 0.160),
+		"field_glow_left":    Color("0F2A28"),
+		"field_glow_right":   Color("2A2210"),
+		"field_texture":      Color(1.000, 1.000, 1.000, 0.026),
+		"field_fg":           Color("F2F8F1"),
+		"field_mute":         Color("A7C3A2"),
+
+		# Surfaces and lines
+		"panel":              Color(1.000, 1.000, 1.000, 0.065),
+		"line":               Color(1.000, 1.000, 1.000, 0.140),
+		"slot":               Color(1.000, 1.000, 1.000, 0.160),
+		"slot_fill":          Color(1.000, 1.000, 1.000, 0.030),
+		"chip_bg":            Color(0.063, 0.106, 0.055, 0.620),
+		"chip_line":          Color(1.000, 1.000, 1.000, 0.180),
+		"chip_fg":            Color("DAEAD7"),
+
+		# Accents and semantics
+		"accent":             Color("98DA8B"),
+		"accent_2":           Color("F4D371"),
+		"good":               Color("67D79B"),
+		"danger":             Color("EF6065"),
+		"warn":               Color("EFC44F"),
+
+		# Status conditions
+		"status_psn":         Color("C93A9B"),
+		"status_cnf":         Color("E07A2E"),
+		"status_par":         Color("D8A82A"),
+		"status_asl":         Color("6E7BC4"),
+		"status_brn":         Color("E2603A"),
+
+		# Buttons
+		"btn_primary_top":    Color("3A862B"),
+		"btn_primary_bot":    Color("23837C"),
+		"btn_primary_fg":     Color("FFFFFF"),
+		"btn_secondary":      Color(1.000, 1.000, 1.000, 0.100),
+		"btn_secondary_fg":   Color("CFE0CC"),
+		"btn_edge":           Color(0.000, 0.000, 0.000, 0.300),
+
+		# Locked collection tiles
+		"silhouette_invert":  false,
+		"silhouette_alpha":   0.34,
+	},
+
+	"canopy_light": {
+
+		# Chrome — the header and footer bars
+		"chrome_grad_a":      Color("2DA99F"),
+		"chrome_grad_b":      Color("4BAE37"),
+		"chrome_grad_c":      Color("EDBA21"),
+		"chrome_fg":          Color("10131A"),
+		"chrome_pattern":     Color(1.000, 1.000, 1.000, 0.060),
+		"chrome_line":        Color(0.0, 0.0, 0.0, 0.0),
+		# Field — the play area / content background
+		"field":              Color("F2F9F0"),
+		"field_glow_top":     Color(0.176, 0.663, 0.624, 0.090),
+		"field_glow_bottom":  Color(0.929, 0.729, 0.129, 0.090),
+		"field_glow_left":    Color("DEF4F2"),
+		"field_glow_right":   Color("FBF2D8"),
+		"field_texture":      Color(0.255, 0.490, 0.212, 0.050),
+		"field_fg":           Color("152711"),
+		"field_mute":         Color("54744E"),
+
+		# Surfaces and lines
+		"panel":              Color(0.000, 0.000, 0.000, 0.055),
+		"line":               Color(0.000, 0.000, 0.000, 0.150),
+		"slot":               Color(0.000, 0.000, 0.000, 0.180),
+		"slot_fill":          Color(0.000, 0.000, 0.000, 0.040),
+		"chip_bg":            Color(1.000, 1.000, 1.000, 0.850),
+		"chip_line":          Color(0.000, 0.000, 0.000, 0.200),
+		"chip_fg":            Color("3D6336"),
+
+		# Accents and semantics
+		"accent":             Color("3DA329"),
+		"accent_2":           Color("BD910F"),
+		"good":               Color("16744A"),
+		"danger":             Color("BC2126"),
+		"warn":               Color("856208"),
+
+		# Status conditions
+		"status_psn":         Color("C93A9B"),
+		"status_cnf":         Color("E07A2E"),
+		"status_par":         Color("D8A82A"),
+		"status_asl":         Color("6E7BC4"),
+		"status_brn":         Color("E2603A"),
+
+		# Buttons
+		"btn_primary_top":    Color("3A862B"),
+		"btn_primary_bot":    Color("23837C"),
+		"btn_primary_fg":     Color("FFFFFF"),
+		"btn_secondary":      Color(0.000, 0.000, 0.000, 0.100),
+		"btn_secondary_fg":   Color("3D6336"),
+		"btn_edge":           Color(0.000, 0.000, 0.000, 0.300),
+
+		# Locked collection tiles
+		"silhouette_invert":  true,
+		"silhouette_alpha":   0.32,
+	},
+
+	"gengar_dark": {
+
+		# Chrome — the header and footer bars
+		"chrome_grad_a":      Color("241B3A"),
+		"chrome_grad_b":      Color("2F2045"),
+		"chrome_grad_c":      Color("3A2450"),
+		"chrome_fg":          Color("FFFFFF"),
+		"chrome_pattern":     Color(1.000, 1.000, 1.000, 0.045),
+		"chrome_line":        Color(1.0, 1.0, 1.0, 0.10),
+		# Field — the play area / content background
+		"field":              Color("1A1630"),
+		"field_glow_top":     Color(0.878, 0.439, 0.604, 0.140),
+		"field_glow_bottom":  Color(0.941, 0.627, 0.235, 0.160),
+		"field_glow_left":    Color("2E2148"),
+		"field_glow_right":   Color("3A1F3C"),
+		"field_texture":      Color(1.000, 1.000, 1.000, 0.022),
+		"field_fg":           Color("EFEAF7"),
+		"field_mute":         Color("9C90B8"),
+
+		# Surfaces and lines
+		"panel":              Color(1.000, 1.000, 1.000, 0.065),
+		"line":               Color(1.000, 1.000, 1.000, 0.140),
+		"slot":               Color(1.000, 1.000, 1.000, 0.160),
+		"slot_fill":          Color(1.000, 1.000, 1.000, 0.030),
+		"chip_bg":            Color(0.071, 0.063, 0.133, 0.620),
+		"chip_line":          Color(1.000, 1.000, 1.000, 0.180),
+		"chip_fg":            Color("DDD4EC"),
+
+		# Accents and semantics
+		"accent":             Color("F0A03C"),
+		"accent_2":           Color("E0709A"),
+		"good":               Color("67D79B"),
+		"danger":             Color("EF6065"),
+		"warn":               Color("EFC44F"),
+
+		# Status conditions
+		"status_psn":         Color("C93A9B"),
+		"status_cnf":         Color("E07A2E"),
+		"status_par":         Color("D8A82A"),
+		"status_asl":         Color("6E7BC4"),
+		"status_brn":         Color("E2603A"),
+
+		# Buttons
+		"btn_primary_top":    Color("F0A03C"),
+		"btn_primary_bot":    Color("B86C0E"),
+		"btn_primary_fg":     Color("0D0D12"),
+		"btn_secondary":      Color(1.000, 1.000, 1.000, 0.100),
+		"btn_secondary_fg":   Color("CDC2E0"),
+		"btn_edge":           Color(0.000, 0.000, 0.000, 0.300),
+
+		# Locked collection tiles
+		"silhouette_invert":  false,
+		"silhouette_alpha":   0.34,
+	},
+
+	"gengar_light": {
+
+		# Chrome — the header and footer bars
+		"chrome_grad_a":      Color("241B3A"),
+		"chrome_grad_b":      Color("2F2045"),
+		"chrome_grad_c":      Color("3A2450"),
+		"chrome_fg":          Color("FFFFFF"),
+		"chrome_pattern":     Color(1.000, 1.000, 1.000, 0.045),
+		"chrome_line":        Color(1.0, 1.0, 1.0, 0.10),
+		# Field — the play area / content background
+		"field":              Color("F6F2FB"),
+		"field_glow_top":     Color(0.878, 0.439, 0.604, 0.090),
+		"field_glow_bottom":  Color(0.941, 0.627, 0.235, 0.090),
+		"field_glow_left":    Color("F2E6FA"),
+		"field_glow_right":   Color("FFEEDC"),
+		"field_texture":      Color(0.471, 0.353, 0.627, 0.040),
+		"field_fg":           Color("1F1830"),
+		"field_mute":         Color("665A80"),
+
+		# Surfaces and lines
+		"panel":              Color(0.000, 0.000, 0.000, 0.055),
+		"line":               Color(0.000, 0.000, 0.000, 0.150),
+		"slot":               Color(0.000, 0.000, 0.000, 0.180),
+		"slot_fill":          Color(0.000, 0.000, 0.000, 0.040),
+		"chip_bg":            Color(1.000, 1.000, 1.000, 0.850),
+		"chip_line":          Color(0.000, 0.000, 0.000, 0.200),
+		"chip_fg":            Color("4B3D66"),
+
+		# Accents and semantics
+		"accent":             Color("8A5600"),
+		"accent_2":           Color("B03462"),
+		"good":               Color("16744A"),
+		"danger":             Color("BC2126"),
+		"warn":               Color("856208"),
+
+		# Status conditions
+		"status_psn":         Color("C93A9B"),
+		"status_cnf":         Color("E07A2E"),
+		"status_par":         Color("D8A82A"),
+		"status_asl":         Color("6E7BC4"),
+		"status_brn":         Color("E2603A"),
+
+		# Buttons
+		"btn_primary_top":    Color("8A5600"),
+		"btn_primary_bot":    Color("241600"),
+		"btn_primary_fg":     Color("FFFFFF"),
+		"btn_secondary":      Color(0.000, 0.000, 0.000, 0.100),
+		"btn_secondary_fg":   Color("4B3D66"),
+		"btn_edge":           Color(0.000, 0.000, 0.000, 0.300),
+
+		# Locked collection tiles
+		"silhouette_invert":  true,
+		"silhouette_alpha":   0.32,
+	},
+
+	"shuppet_dark": {
+
+		# Chrome — the header and footer bars
+		"chrome_grad_a":      Color("0C0F15"),
+		"chrome_grad_b":      Color("0C0F15"),
+		"chrome_grad_c":      Color("0C0F15"),
+		"chrome_fg":          Color("FFFFFF"),
+		"chrome_pattern":     Color(1.000, 1.000, 1.000, 0.050),
+		"chrome_line":        Color(1.0, 1.0, 1.0, 0.08),
+		# Field — the play area / content background
+		"field":              Color("0F1219"),
+		"field_glow_top":     Color(0.941, 0.451, 0.420, 0.180),
+		"field_glow_bottom":  Color(0.302, 0.639, 0.961, 0.180),
+		"field_glow_left":    Color("1A202B"),
+		"field_glow_right":   Color("141B26"),
+		"field_texture":      Color(1.000, 1.000, 1.000, 0.025),
+		"field_fg":           Color("E9ECF1"),
+		"field_mute":         Color("8A93A6"),
+
+		# Surfaces and lines
+		"panel":              Color(1.000, 1.000, 1.000, 0.065),
+		"line":               Color(1.000, 1.000, 1.000, 0.140),
+		"slot":               Color(1.000, 1.000, 1.000, 0.160),
+		"slot_fill":          Color(1.000, 1.000, 1.000, 0.030),
+		"chip_bg":            Color(0.031, 0.035, 0.051, 0.620),
+		"chip_line":          Color(1.000, 1.000, 1.000, 0.180),
+		"chip_fg":            Color("D9DFE9"),
+
+		# Accents and semantics
+		"accent":             Color("4DA3F5"),
+		"accent_2":           Color("F0736B"),
+		"good":               Color("67D79B"),
+		"danger":             Color("EF6065"),
+		"warn":               Color("EFC44F"),
+
+		# Status conditions
+		"status_psn":         Color("C93A9B"),
+		"status_cnf":         Color("E07A2E"),
+		"status_par":         Color("D8A82A"),
+		"status_asl":         Color("6E7BC4"),
+		"status_brn":         Color("E2603A"),
+
+		# Buttons
+		"btn_primary_top":    Color("4DA3F5"),
+		"btn_primary_bot":    Color("0C70D0"),
+		"btn_primary_fg":     Color("0D0D12"),
+		"btn_secondary":      Color(1.000, 1.000, 1.000, 0.100),
+		"btn_secondary_fg":   Color("AEB7C6"),
+		"btn_edge":           Color(0.000, 0.000, 0.000, 0.300),
+
+		# Locked collection tiles
+		"silhouette_invert":  false,
+		"silhouette_alpha":   0.34,
+	},
+
+	"shuppet_light": {
+
+		# Chrome — the header and footer bars
+		"chrome_grad_a":      Color("4C4F54"),
+		"chrome_grad_b":      Color("4C4F54"),
+		"chrome_grad_c":      Color("4C4F54"),
+		"chrome_fg":          Color("FFFFFF"),
+		"chrome_pattern":     Color(1.000, 1.000, 1.000, 0.050),
+		"chrome_line":        Color(1.0, 1.0, 1.0, 0.08),
+		# Field — the play area / content background
+		"field":              Color("F2F5FA"),
+		"field_glow_top":     Color(0.941, 0.451, 0.420, 0.090),
+		"field_glow_bottom":  Color(0.302, 0.639, 0.961, 0.090),
+		"field_glow_left":    Color("E2EEFC"),
+		"field_glow_right":   Color("FDE7E3"),
+		"field_texture":      Color(0.157, 0.275, 0.471, 0.045),
+		"field_fg":           Color("121924"),
+		"field_mute":         Color("59667A"),
+
+		# Surfaces and lines
+		"panel":              Color(0.000, 0.000, 0.000, 0.055),
+		"line":               Color(0.000, 0.000, 0.000, 0.150),
+		"slot":               Color(0.000, 0.000, 0.000, 0.180),
+		"slot_fill":          Color(0.000, 0.000, 0.000, 0.040),
+		"chip_bg":            Color(1.000, 1.000, 1.000, 0.850),
+		"chip_line":          Color(0.000, 0.000, 0.000, 0.200),
+		"chip_fg":            Color("33404F"),
+
+		# Accents and semantics
+		"accent":             Color("1668C4"),
+		"accent_2":           Color("B8402F"),
+		"good":               Color("16744A"),
+		"danger":             Color("BC2126"),
+		"warn":               Color("856208"),
+
+		# Status conditions
+		"status_psn":         Color("C93A9B"),
+		"status_cnf":         Color("E07A2E"),
+		"status_par":         Color("D8A82A"),
+		"status_asl":         Color("6E7BC4"),
+		"status_brn":         Color("E2603A"),
+
+		# Buttons
+		"btn_primary_top":    Color("1668C4"),
+		"btn_primary_bot":    Color("0C3768"),
+		"btn_primary_fg":     Color("FFFFFF"),
+		"btn_secondary":      Color(0.000, 0.000, 0.000, 0.100),
+		"btn_secondary_fg":   Color("33404F"),
+		"btn_edge":           Color(0.000, 0.000, 0.000, 0.300),
+
+		# Locked collection tiles
+		"silhouette_invert":  true,
+		"silhouette_alpha":   0.32,
+	},
+
+	"code_dark": {
+
+		# Chrome — the header and footer bars
+		"chrome_grad_a":      Color("05070C"),
+		"chrome_grad_b":      Color("05070C"),
+		"chrome_grad_c":      Color("05070C"),
+		"chrome_fg":          Color("FFFFFF"),
+		"chrome_pattern":     Color(0.000, 0.898, 0.831, 0.070),
+		"chrome_line":        Color(0.0, 0.898, 0.831, 0.35),
+		# Field — the play area / content background
+		"field":              Color("06090F"),
+		"field_glow_top":     Color(1.000, 0.239, 0.541, 0.150),
+		"field_glow_bottom":  Color(0.000, 0.898, 0.831, 0.160),
+		"field_glow_left":    Color("0A1A1C"),
+		"field_glow_right":   Color("14101A"),
+		"field_texture":      Color(0.000, 0.898, 0.831, 0.050),
+		"field_fg":           Color("DFF7F5"),
+		"field_mute":         Color("7FA6B2"),
+
+		# Surfaces and lines
+		"panel":              Color(1.000, 1.000, 1.000, 0.065),
+		"line":               Color(1.000, 1.000, 1.000, 0.140),
+		"slot":               Color(1.000, 1.000, 1.000, 0.160),
+		"slot_fill":          Color(1.000, 1.000, 1.000, 0.030),
+		"chip_bg":            Color(0.024, 0.035, 0.059, 0.620),
+		"chip_line":          Color(1.000, 1.000, 1.000, 0.180),
+		"chip_fg":            Color("9BEDE6"),
+
+		# Accents and semantics
+		"accent":             Color("00E5D4"),
+		"accent_2":           Color("FF3D8A"),
+		"good":               Color("67D79B"),
+		"danger":             Color("EF6065"),
+		"warn":               Color("EFC44F"),
+
+		# Status conditions
+		"status_psn":         Color("C93A9B"),
+		"status_cnf":         Color("E07A2E"),
+		"status_par":         Color("D8A82A"),
+		"status_asl":         Color("6E7BC4"),
+		"status_brn":         Color("E2603A"),
+
+		# Buttons
+		"btn_primary_top":    Color("00E5D4"),
+		"btn_primary_bot":    Color("007F76"),
+		"btn_primary_fg":     Color("0D0D12"),
+		"btn_secondary":      Color(1.000, 1.000, 1.000, 0.100),
+		"btn_secondary_fg":   Color("9BEDE6"),
+		"btn_edge":           Color(0.000, 0.000, 0.000, 0.300),
+
+		# Locked collection tiles
+		"silhouette_invert":  false,
+		"silhouette_alpha":   0.34,
+	},
+
+	"code_light": {
+
+		# Chrome — the header and footer bars
+		"chrome_grad_a":      Color("05070C"),
+		"chrome_grad_b":      Color("05070C"),
+		"chrome_grad_c":      Color("05070C"),
+		"chrome_fg":          Color("FFFFFF"),
+		"chrome_pattern":     Color(0.000, 0.898, 0.831, 0.070),
+		"chrome_line":        Color(0.0, 0.898, 0.831, 0.35),
+		# Field — the play area / content background
+		"field":              Color("EFF7F6"),
+		"field_glow_top":     Color(1.000, 0.239, 0.541, 0.080),
+		"field_glow_bottom":  Color(0.000, 0.898, 0.831, 0.080),
+		"field_glow_left":    Color("DCF6F2"),
+		"field_glow_right":   Color("FFE2EC"),
+		"field_texture":      Color(0.000, 0.471, 0.431, 0.050),
+		"field_fg":           Color("0B1A1C"),
+		"field_mute":         Color("4C6467"),
+
+		# Surfaces and lines
+		"panel":              Color(0.000, 0.000, 0.000, 0.055),
+		"line":               Color(0.000, 0.000, 0.000, 0.150),
+		"slot":               Color(0.000, 0.000, 0.000, 0.180),
+		"slot_fill":          Color(0.000, 0.000, 0.000, 0.040),
+		"chip_bg":            Color(1.000, 1.000, 1.000, 0.850),
+		"chip_line":          Color(0.000, 0.000, 0.000, 0.200),
+		"chip_fg":            Color("17494A"),
+
+		# Accents and semantics
+		"accent":             Color("00706A"),
+		"accent_2":           Color("C4005A"),
+		"good":               Color("16744A"),
+		"danger":             Color("BC2126"),
+		"warn":               Color("856208"),
+
+		# Status conditions
+		"status_psn":         Color("C93A9B"),
+		"status_cnf":         Color("E07A2E"),
+		"status_par":         Color("D8A82A"),
+		"status_asl":         Color("6E7BC4"),
+		"status_brn":         Color("E2603A"),
+
+		# Buttons
+		"btn_primary_top":    Color("00706A"),
+		"btn_primary_bot":    Color("001413"),
+		"btn_primary_fg":     Color("FFFFFF"),
+		"btn_secondary":      Color(0.000, 0.000, 0.000, 0.100),
+		"btn_secondary_fg":   Color("17494A"),
+		"btn_edge":           Color(0.000, 0.000, 0.000, 0.300),
+
+		# Locked collection tiles
+		"silhouette_invert":  true,
+		"silhouette_alpha":   0.32,
+	},
+
+	"umbreon_dark": {
+
+		# Chrome — the header and footer bars
+		"chrome_grad_a":      Color("1B1F2A"),
+		"chrome_grad_b":      Color("1B1F2A"),
+		"chrome_grad_c":      Color("1B1F2A"),
+		"chrome_fg":          Color("FFFFFF"),
+		"chrome_pattern":     Color(0.941, 0.906, 0.831, 0.050),
+		"chrome_line":        Color("C8A24A"),
+		# Field — the play area / content background
+		"field":              Color("141821"),
+		"field_glow_top":     Color(0.498, 0.659, 0.722, 0.150),
+		"field_glow_bottom":  Color(0.784, 0.635, 0.290, 0.150),
+		"field_glow_left":    Color("1D2432"),
+		"field_glow_right":   Color("221E1A"),
+		"field_texture":      Color(0.941, 0.906, 0.831, 0.030),
+		"field_fg":           Color("F1EADB"),
+		"field_mute":         Color("9A9382"),
+
+		# Surfaces and lines
+		"panel":              Color(1.000, 1.000, 1.000, 0.065),
+		"line":               Color(1.000, 1.000, 1.000, 0.140),
+		"slot":               Color(1.000, 1.000, 1.000, 0.160),
+		"slot_fill":          Color(1.000, 1.000, 1.000, 0.030),
+		"chip_bg":            Color(0.047, 0.059, 0.078, 0.620),
+		"chip_line":          Color(1.000, 1.000, 1.000, 0.180),
+		"chip_fg":            Color("E8DCC0"),
+
+		# Accents and semantics
+		"accent":             Color("C8A24A"),
+		"accent_2":           Color("7FA8B8"),
+		"good":               Color("67D79B"),
+		"danger":             Color("EF6065"),
+		"warn":               Color("EFC44F"),
+
+		# Status conditions
+		"status_psn":         Color("C93A9B"),
+		"status_cnf":         Color("E07A2E"),
+		"status_par":         Color("D8A82A"),
+		"status_asl":         Color("6E7BC4"),
+		"status_brn":         Color("E2603A"),
+
+		# Buttons
+		"btn_primary_top":    Color("C8A24A"),
+		"btn_primary_bot":    Color("846828"),
+		"btn_primary_fg":     Color("0D0D12"),
+		"btn_secondary":      Color(1.000, 1.000, 1.000, 0.100),
+		"btn_secondary_fg":   Color("D8CDB4"),
+		"btn_edge":           Color(0.000, 0.000, 0.000, 0.300),
+
+		# Locked collection tiles
+		"silhouette_invert":  false,
+		"silhouette_alpha":   0.34,
+	},
+
+	"umbreon_light": {
+
+		# Chrome — the header and footer bars
+		"chrome_grad_a":      Color("1B1F2A"),
+		"chrome_grad_b":      Color("1B1F2A"),
+		"chrome_grad_c":      Color("1B1F2A"),
+		"chrome_fg":          Color("FFFFFF"),
+		"chrome_pattern":     Color(0.941, 0.906, 0.831, 0.050),
+		"chrome_line":        Color("C8A24A"),
+		# Field — the play area / content background
+		"field":              Color("F7F3E9"),
+		"field_glow_top":     Color(0.498, 0.659, 0.722, 0.080),
+		"field_glow_bottom":  Color(0.784, 0.635, 0.290, 0.090),
+		"field_glow_left":    Color("FBF0DC"),
+		"field_glow_right":   Color("ECF2F2"),
+		"field_texture":      Color(0.471, 0.392, 0.196, 0.050),
+		"field_fg":           Color("171A21"),
+		"field_mute":         Color("6A6355"),
+
+		# Surfaces and lines
+		"panel":              Color(0.000, 0.000, 0.000, 0.055),
+		"line":               Color(0.000, 0.000, 0.000, 0.150),
+		"slot":               Color(0.000, 0.000, 0.000, 0.180),
+		"slot_fill":          Color(0.000, 0.000, 0.000, 0.040),
+		"chip_bg":            Color(1.000, 1.000, 1.000, 0.850),
+		"chip_line":          Color(0.000, 0.000, 0.000, 0.200),
+		"chip_fg":            Color("4A4230"),
+
+		# Accents and semantics
+		"accent":             Color("8A6A12"),
+		"accent_2":           Color("2F6E82"),
+		"good":               Color("16744A"),
+		"danger":             Color("BC2126"),
+		"warn":               Color("856208"),
+
+		# Status conditions
+		"status_psn":         Color("C93A9B"),
+		"status_cnf":         Color("E07A2E"),
+		"status_par":         Color("D8A82A"),
+		"status_asl":         Color("6E7BC4"),
+		"status_brn":         Color("E2603A"),
+
+		# Buttons
+		"btn_primary_top":    Color("8A6A12"),
+		"btn_primary_bot":    Color("302506"),
+		"btn_primary_fg":     Color("FFFFFF"),
+		"btn_secondary":      Color(0.000, 0.000, 0.000, 0.100),
+		"btn_secondary_fg":   Color("4A4230"),
+		"btn_edge":           Color(0.000, 0.000, 0.000, 0.300),
+
+		# Locked collection tiles
+		"silhouette_invert":  true,
+		"silhouette_alpha":   0.32,
+	},
+
+	"sharpedo_dark": {
+
+		# Chrome — the header and footer bars
+		"chrome_grad_a":      Color("16233F"),
+		"chrome_grad_b":      Color("2E4A7A"),
+		"chrome_grad_c":      Color("16233F"),
+		"chrome_fg":          Color("FFFFFF"),
+		"chrome_pattern":     Color(1.000, 1.000, 1.000, 0.060),
+		"chrome_line":        Color("C77F45"),
+		# Field — the play area / content background
+		"field":              Color("151A23"),
+		"field_glow_top":     Color(0.498, 0.659, 0.878, 0.150),
+		"field_glow_bottom":  Color(0.780, 0.498, 0.271, 0.170),
+		"field_glow_left":    Color("121B2E"),
+		"field_glow_right":   Color("241A16"),
+		"field_texture":      Color(0.824, 0.902, 1.000, 0.030),
+		"field_fg":           Color("F2F4F7"),
+		"field_mute":         Color("A3AEC2"),
+
+		# Surfaces and lines
+		"panel":              Color(1.000, 1.000, 1.000, 0.065),
+		"line":               Color(1.000, 1.000, 1.000, 0.140),
+		"slot":               Color(1.000, 1.000, 1.000, 0.160),
+		"slot_fill":          Color(1.000, 1.000, 1.000, 0.030),
+		"chip_bg":            Color(0.051, 0.067, 0.086, 0.620),
+		"chip_line":          Color(1.000, 1.000, 1.000, 0.180),
+		"chip_fg":            Color("D8DEE8"),
+
+		# Accents and semantics
+		"accent":             Color("C77F45"),
+		"accent_2":           Color("7FA8E0"),
+		"good":               Color("67D79B"),
+		"danger":             Color("EF6065"),
+		"warn":               Color("EFC44F"),
+
+		# Status conditions
+		"status_psn":         Color("C93A9B"),
+		"status_cnf":         Color("E07A2E"),
+		"status_par":         Color("D8A82A"),
+		"status_asl":         Color("6E7BC4"),
+		"status_brn":         Color("E2603A"),
+
+		# Buttons
+		"btn_primary_top":    Color("C77F45"),
+		"btn_primary_bot":    Color("804E26"),
+		"btn_primary_fg":     Color("FFFFFF"),
+		"btn_secondary":      Color(1.000, 1.000, 1.000, 0.100),
+		"btn_secondary_fg":   Color("CED4DE"),
+		"btn_edge":           Color(0.000, 0.000, 0.000, 0.300),
+
+		# Locked collection tiles
+		"silhouette_invert":  false,
+		"silhouette_alpha":   0.34,
+	},
+
+	"sharpedo_light": {
+
+		# Chrome — the header and footer bars
+		"chrome_grad_a":      Color("16233F"),
+		"chrome_grad_b":      Color("2E4A7A"),
+		"chrome_grad_c":      Color("16233F"),
+		"chrome_fg":          Color("FFFFFF"),
+		"chrome_pattern":     Color(1.000, 1.000, 1.000, 0.060),
+		"chrome_line":        Color("C77F45"),
+		# Field — the play area / content background
+		"field":              Color("F3F4F7"),
+		"field_glow_top":     Color(0.498, 0.659, 0.878, 0.080),
+		"field_glow_bottom":  Color(0.780, 0.498, 0.271, 0.090),
+		"field_glow_left":    Color("E2EAF7"),
+		"field_glow_right":   Color("F8E9DC"),
+		"field_texture":      Color(0.118, 0.235, 0.431, 0.050),
+		"field_fg":           Color("131820"),
+		"field_mute":         Color("4F5C72"),
+
+		# Surfaces and lines
+		"panel":              Color(0.000, 0.000, 0.000, 0.055),
+		"line":               Color(0.000, 0.000, 0.000, 0.150),
+		"slot":               Color(0.000, 0.000, 0.000, 0.180),
+		"slot_fill":          Color(0.000, 0.000, 0.000, 0.040),
+		"chip_bg":            Color(1.000, 1.000, 1.000, 0.850),
+		"chip_line":          Color(0.000, 0.000, 0.000, 0.200),
+		"chip_fg":            Color("37455D"),
+
+		# Accents and semantics
+		"accent":             Color("8A4E14"),
+		"accent_2":           Color("26507F"),
+		"good":               Color("16744A"),
+		"danger":             Color("BC2126"),
+		"warn":               Color("856208"),
+
+		# Status conditions
+		"status_psn":         Color("C93A9B"),
+		"status_cnf":         Color("E07A2E"),
+		"status_par":         Color("D8A82A"),
+		"status_asl":         Color("6E7BC4"),
+		"status_brn":         Color("E2603A"),
+
+		# Buttons
+		"btn_primary_top":    Color("8A4E14"),
+		"btn_primary_bot":    Color("311C07"),
+		"btn_primary_fg":     Color("FFFFFF"),
+		"btn_secondary":      Color(0.000, 0.000, 0.000, 0.100),
+		"btn_secondary_fg":   Color("37455D"),
+		"btn_edge":           Color(0.000, 0.000, 0.000, 0.300),
+
+		# Locked collection tiles
+		"silhouette_invert":  true,
+		"silhouette_alpha":   0.32,
 	},
 }
 
-const DEFAULT_THEME := "spectrum_night"
+# sunset_dark is the look the game shipped in, under its old name spectrum_night.
+const DEFAULT_THEME := "sunset_dark"
+
+# ─── Display names ───────────────────────────────────────────────────────────
+# DELIBERATELY EMPTY. theme_display_name() title-cases an id, so every current
+# theme already reads correctly on the Options screen — "sunset_dark" shows as
+# "Sunset Dark", "shuppet_light" as "Shuppet Light". Adding sixteen entries that
+# each restate the id is sixteen more things to drift out of step.
+#
+# Add an entry ONLY when title-casing an id would read badly, which today is
+# nothing. The Options row is built by walking THEMES, never from a list here,
+# so a theme appears as a button the moment it is added and re-baked.
+const THEME_NAMES := {}
 
 # ─── Energy type colours ─────────────────────────────────────────────────────
 # Used for attack cost pips, the deck builder's energy tiles and the card
@@ -273,10 +1080,9 @@ const CASH_PILL := {
 # theme block above, and Continue Game is the btn_primary_* gradient the rest of
 # the game's confirm buttons use.
 #
-# The three that are genuinely its own are the mark's four gradient stops, the
-# rule's near colour, and New Game's fill — which is white at 8%, HALF the
-# game's btn_secondary, because a full-strength secondary button next to the
-# primary reads as two equal choices and the splash wants one.
+# The only things genuinely its own are the mark's four gradient stops and the
+# rule's near colour. Both buttons now take the game's own faces: New Game is
+# btn_secondary, Continue Game is the btn_primary_* gradient.
 const SPLASH := {
 	# The mark. Upper arm runs top-left to bottom-right, lower arm top-right to
 	# bottom-left, so the pink is shared and lands in the middle of the lockup.
@@ -297,8 +1103,15 @@ const SPLASH := {
 	"tcg":      Color("F0E4FA"),
 
 	# New Game's face and label. Continue Game takes btn_primary_top/bot/fg.
-	"new_game_top": Color(1.0, 1.0, 1.0, 0.08),
-	"new_game_bot": Color(1.0, 1.0, 1.0, 0.08),
+	#
+	# These are now EXACTLY btn_secondary and btn_secondary_fg. They used to be
+	# half-strength on the theory that a full secondary beside the primary read as
+	# two equal choices — but the in-game secondary was 16% at the time, so the
+	# very first pair of buttons the player ever sees did not match the pair on
+	# every screen after it. Secondary came down to 10% instead, which gives the
+	# hierarchy without splitting the token in two.
+	"new_game_top": Color(1.0, 1.0, 1.0, 0.10),
+	"new_game_bot": Color(1.0, 1.0, 1.0, 0.10),
 	"new_game_fg":  Color("D9CBEC"),
 
 	# Hover and press, composited OVER a face. Same values the baked button art
@@ -350,12 +1163,19 @@ const METRICS := {
 	# ISSUE #184: buttons are pills, not rounded rectangles. 22 against the 48px
 	# button height reads as a full pill without the 9-patch corners meeting.
 	# Build_UI_Themes derives its TEX_MARGIN from this — re-run it after a change.
-	"btn_radius":        22.0,
+	# 11, matching the chip radius. It was raised to 22 by ISSUE #184 to make
+	# buttons read as pills; the theme mocks are all authored at 11 and that now
+	# wins. Changing this changes every button face in every theme — re-run
+	# Build_UI_Themes.gd after touching it.
+	"btn_radius":        11.0,
 	"panel_radius":      15.0,
 	"slot_radius":       7.0,
 
 	# Button
-	"btn_pad_v":         13.0,
+	# 10% off the BUTTON, not off the padding: a button is pad_v twice plus a
+	# ~22px line box, so ~48px, and 10% of that is 4.8px split between the two
+	# pads. Global, so every button in the game is a little shorter.
+	"btn_pad_v":         10.6,
 	"btn_pad_h":         29.0,
 	"btn_edge_h":        5.0,     # the single inset bottom edge
 	"btn_hover_lift":    0.06,    # fill lightened by this much on hover
@@ -401,19 +1221,46 @@ const SEL_SCALE_TIME  := 0.15    # seconds, ease-out
 const SEL_RING_PX     := 4.0     # ring thickness
 const SEL_RING_PERIOD := 3.0     # seconds per revolution
 
-# ─── Chevron motion ──────────────────────────────────────────────────────────
-# Diagonal stripes on both chrome bars and the field, counter-scrolling. The
-# loop distance MUST be an exact multiple of the pattern period or the texture
-# visibly jumps on wrap — these pairs are chosen so it does not.
+# ─── Chevrons ────────────────────────────────────────────────────────────────
+# Thin diagonal stripes crossing both chrome bars and the field, counter-
+# scrolling. Shared by every theme — a theme changes their COLOUR
+# (chrome_pattern, field_texture), never their geometry.
+#
+# They are a fine TEXTURE, not broad bands of light: 3px of ink every 17px on the
+# bars, 18px every 74px on the field, hard-edged with a single pixel of
+# antialiasing. Roughly 113 cross a bar and 26 cross the screen.
+#
+# IF THEY EVER READ AS TOO BUSY, LOWER THE ALPHA. Widening them and spacing them
+# further apart was tried and reverted — it turns the texture into slow sweeping
+# bands and loses the design.
+#
+# ── THE SPEEDS LOOK ODD, AND THEY ARE CORRECT ────────────────
+# _TIME is how often a stripe passes a fixed point, which is the thing the eye
+# actually reads. But the pattern is translated along +X while the stripes lie at
+# 115 degrees, so a horizontal shift of d only advances the pattern by
+# d * sin(115°) = d * 0.9063 across the stripes. The loop distances below are
+# therefore the period DIVIDED by that factor — 17 / 0.9063 = 18.76, and
+# 74 / 0.9063 = 81.65 — which is what makes a stripe arrive every 3.4s and 14s
+# rather than every 3.75s and 15.4s.
+#
+# The pattern is generated by mod() against the period, so it is periodic by
+# construction and there is no wrap seam at any offset.
 const CHEVRON_ANGLE_DEG    := 115.0
 const CHEVRON_BAR_STRIPE   := 3.0
 const CHEVRON_BAR_PERIOD   := 17.0
-const CHEVRON_BAR_LOOP     := 34.0    # 2 periods
-const CHEVRON_BAR_TIME     := 6.8     # seconds for one loop -> 5 px/s, scrolls RIGHT
+const CHEVRON_BAR_LOOP     := 18.76   # 1 period, corrected for the 115 degree angle
+const CHEVRON_BAR_TIME     := 3.4     # a stripe every 3.4s -> 5.52 px/s in x, scrolls RIGHT
 const CHEVRON_FIELD_STRIPE := 18.0
 const CHEVRON_FIELD_PERIOD := 74.0
-const CHEVRON_FIELD_LOOP   := 74.0    # 1 period
-const CHEVRON_FIELD_TIME   := 14.0    # seconds for one loop -> 5.3 px/s, scrolls LEFT
+const CHEVRON_FIELD_LOOP   := 81.65   # 1 period, corrected for the 115 degree angle
+const CHEVRON_FIELD_TIME   := 14.0    # a stripe every 14s -> 5.83 px/s in x, scrolls LEFT
+
+# ─── The chrome keyline ──────────────────────────────────────────────────────
+# A 1px rule along the bar edge that faces the content. Its colour is the
+# per-theme `chrome_line`; transparent means no rule, which is what the vivid
+# gradient bars use. Five of the eight themes need it — on a flat near-black bar
+# over a near-black field it is the only thing separating the two.
+const CHROME_LINE_PX := 1.0
 
 # ─── State ───────────────────────────────────────────────────────────────────
 
@@ -453,6 +1300,108 @@ func flag(key: String) -> Variant:
 	return THEMES[current].get(key, null)
 
 
+# ─── Derived colours ─────────────────────────────────────────────────────────
+# These two are STATIC so Build_UI_Themes.gd can call them on the loaded script
+# object. Autoloads do not exist in a `--script` run, but static functions on a
+# loaded class do, and the baked button art has to agree with the runtime about
+# these exactly or a selected button will not match a selected chip beside it.
+
+## Relative luminance, the WCAG definition. Used to decide whether a fill wants
+## light ink or dark ink on top of it.
+static func luminance(c: Color) -> float:
+	return 0.2126 * c.r + 0.7152 * c.g + 0.0722 * c.b
+
+
+## THE selection colour for a theme block — the one "this is on" fill.
+##
+## Normally chrome_grad_b, the header gradient's middle stop, so a selected
+## button matches the bar above it. But that stop is only a good selection colour
+## when the chrome bar is genuinely colourful. A theme whose header is near black
+## or deliberately desaturated (dusk, circuit, and any incoming theme built the
+## same way) would produce a selected state you cannot see, so those fall back to
+## `accent`, which every theme guarantees is its lead colour.
+##
+## This is why a theme does not need a 39th token for selection. Do not add one
+## without also updating Docs/THEME_TEMPLATE_SPEC.md, which promises 38.
+static func selection_for(block: Dictionary) -> Color:
+	var b: Color = block["chrome_grad_b"]
+	return b if luminance(b) >= 0.22 else block["accent"]
+
+
+## The fill for a secondary button sitting ON A CHROME BAR.
+##
+## `btn_secondary` is the one translucent variant, so it has no colour of its
+## own — it is whatever it sits on, lifted or shaded. The theme keys it to the
+## FIELD, which is right in the content area and wrong on a bar.
+##
+## ── THE DIRECTION IS DECIDED BY THE LABEL, NOT BY THE BAR ────
+## The obvious rule — lift a dark bar, shade a light one — is wrong, and got
+## this backwards on the vivid themes. A hot pink bar measures as "dark" by
+## luminance, so the obvious rule LIFTED it, and the white label on the lightened
+## pink came out at 3:1. The bar being dark is not the question.
+##
+## Two things have to be true at once: the label must read on the button face,
+## and the face must be distinguishable from the bar behind it. On a near-black
+## bar a white lift satisfies both, because white text has enormous headroom
+## there. Everywhere else, lifting eats the label, so the face is shaded instead
+## — and shaded hard enough to matter, because a light shade on a saturated
+## colour barely moves it.
+##
+## So: try the lift, keep it only if the label still clears AA, otherwise shade.
+##
+## Build_UI_Themes.gd bakes the face from this and Theme_Audit.gd measures it
+## from this, so the art and the check can never drift apart.
+static func chrome_button_tint(block: Dictionary) -> Color:
+	var mid: Color = block["chrome_grad_b"]
+	var fg: Color = block["chrome_fg"]
+	var lift := Color(1.0, 1.0, 1.0, 0.18)
+	if contrast_ratio(fg, composite(lift, mid)) >= 4.5:
+		return lift
+	return Color(0.0, 0.0, 0.0, 0.30)
+
+
+## Alpha-composites `over` onto an opaque `under`.
+static func composite(over: Color, under: Color) -> Color:
+	return Color(
+		over.r * over.a + under.r * (1.0 - over.a),
+		over.g * over.a + under.g * (1.0 - over.a),
+		over.b * over.a + under.b * (1.0 - over.a))
+
+
+## WCAG contrast ratio between two OPAQUE colours. This linearises each channel,
+## unlike luminance() above, which is the cheap gamma-space approximation used
+## only for the light-ink/dark-ink decision. Contrast maths needs the real one.
+static func contrast_ratio(a: Color, b: Color) -> float:
+	var la := _rel_luminance(a)
+	var lb := _rel_luminance(b)
+	return (maxf(la, lb) + 0.05) / (minf(la, lb) + 0.05)
+
+
+static func _rel_luminance(c: Color) -> float:
+	return 0.2126 * _to_linear(c.r) + 0.7152 * _to_linear(c.g) + 0.0722 * _to_linear(c.b)
+
+
+static func _to_linear(channel: float) -> float:
+	return channel / 12.92 if channel <= 0.04045 else pow((channel + 0.055) / 1.055, 2.4)
+
+
+## The text colour that reads on `fill`. White on a dark fill; on a light one, a
+## heavily darkened version of the fill's OWN hue rather than flat black, which
+## keeps a green button's label looking like it belongs to the green button.
+##
+## Replaces the two hand-tuned constants that used to live in Build_UI_Themes.gd
+## for good and warn. Those only worked because someone eyeballed them against
+## Spectrum Night's specific mint and amber; an incoming theme picking a pale
+## `danger` would have got unreadable white text with no warning.
+static func ink_on(fill: Color) -> Color:
+	if luminance(fill) < 0.5:
+		return Color.WHITE
+	var ink := Color(fill.r, fill.g, fill.b)
+	ink.v = 0.13
+	ink.s = minf(fill.s * 0.8, 0.65)
+	return ink
+
+
 ## The fill for one energy type's cost pip / chip. An unknown type falls back to
 ## Colorless, which is what the card data means by an unlabelled cost anyway.
 func energy_colour(type_name: String) -> Color:
@@ -478,16 +1427,47 @@ func status_colour(code: String) -> Color:
 ## One of the BATTLE dictionary's three-stop gradients, as [Color, Color, Color].
 ## Call it with "band_win_grad", "vs_text_grad", "disc_loss_grad" and so on. An
 ## unknown key returns the intro stops rather than crashing a match transition.
+## ── WHICH BATTLE COLOURS FOLLOW THE THEME, AND WHICH DO NOT ──
+## The VS screen is BRANDING: it is the game's own lockup, so its band and its
+## word follow the chrome gradient and change with the theme.
+##
+## Win and loss are SEMANTIC. Green means you won and red means you lost in every
+## theme, for the same reason the five status conditions and the eleven energy
+## types do not move — the player learns the colour, and a theme that made a loss
+## green would be actively misleading. Those ramps stay fixed.
 func battle_grad(key: String) -> Array:
+	match key:
+		# The chrome bar's own ramp, on the intro band.
+		"band_intro_grad":
+			return [col("chrome_grad_a"), col("chrome_grad_b"), col("chrome_grad_c")]
+		# The word inside the badge. Deliberately LIGHTER than the band behind it
+		# — the badge sits on the dark ground, not on the band, so it needs its
+		# own contrast. Each stop is the band's stop lifted toward white.
+		"vs_text_grad":
+			return [col("chrome_grad_a").lightened(0.45),
+				col("chrome_grad_b").lightened(0.40),
+				col("chrome_grad_c").lightened(0.35)]
 	if not BATTLE.has(key):
 		push_warning("UITheme: no battle gradient '%s'" % key)
-		return BATTLE["band_intro_grad"]
+		return battle_grad("band_intro_grad")
 	return BATTLE[key]
 
 
 ## A single colour out of the BATTLE dictionary — the side accents, the prize
 ## gold, the badge well.
 func battle_col(key: String) -> Color:
+	match key:
+		# The two sides. These ARE `accent` and `accent_2`: the theme block already
+		# documents those as "player side" and "opponent side", and every incoming
+		# theme is required to make them differ in hue, which is what lets the
+		# player tell their half of the board from the opponent's.
+		"side_player":   return col("accent")
+		"side_opponent": return col("accent_2")
+		# The dark disc the badge ring is drawn around — the field, deepened.
+		"badge_well":
+			var well := col("field").darkened(0.45)
+			well.a = 0.55
+			return well
 	if not BATTLE.has(key) or not (BATTLE[key] is Color):
 		push_warning("UITheme: no battle colour '%s'" % key)
 		return Color.MAGENTA
@@ -508,8 +1488,28 @@ func outcome_text_grad(kind: String) -> Array:
 
 
 ## Message-box chrome — "bg", "border", "shadow".
+##
+## DERIVED, not looked up. The box appears on every screen in the game, so
+## leaving it on a fixed dark purple would have made it the one thing that did
+## not follow a theme change. The MSGBOX constant is kept as the record of what
+## Spectrum Night's values were; these derivations reproduce them to within a
+## couple of points and follow every other theme automatically.
 func msgbox_col(key: String) -> Color:
-	return MSGBOX.get(key, Color.MAGENTA)
+	match key:
+		"bg":
+			# The field, a shade deeper, so the box reads as a panel cut out of the
+			# screen it sits on rather than as a separate object.
+			var bg := col("field").darkened(0.08)
+			bg.a = 0.94
+			return bg
+		"border":
+			return col_a("line", 0.15)
+		"shadow":
+			# A cast shadow is an absence of light, not a colour. It stays black on
+			# a light theme too — a "light shadow" is not a thing.
+			return Color(0.0, 0.0, 0.0, 0.60)
+	push_warning("UITheme: no msgbox colour '%s'" % key)
+	return Color.MAGENTA
 
 
 ## Shop cash pill — "top", "bot", "fg".
@@ -518,7 +1518,41 @@ func cash_pill_col(key: String) -> Color:
 
 
 ## Boot splash chrome — see the SPLASH block for the key list.
+##
+## Mostly DERIVED. The mark's four stops and the rule are the chrome gradient
+## read straight off the current theme, so the first screen the player sees is
+## already in their chosen theme rather than permanently in Spectrum Night. The
+## SPLASH constant stays as the record of the authored values; every derivation
+## below reproduces its Spectrum Night colour exactly unless noted.
 func splash_col(key: String) -> Color:
+	match key:
+		# The mark. Upper arm runs top-left to bottom-right, lower arm top-right
+		# to bottom-left, so stop B is shared and lands in the middle of the
+		# lockup. That is exactly the chrome bar's own three-stop ramp.
+		"mark_upper_a": return col("chrome_grad_a")
+		"mark_upper_b": return col("chrome_grad_b")
+		"mark_lower_a": return col("chrome_grad_b")
+		"mark_lower_b": return col("chrome_grad_c")
+
+		# The rule. One near colour at the TCG cap, then each segment fades out
+		# through its own side's stop at 35%.
+		# NOTE: `accent` is a shade off the authored FF6FBE. Imperceptible, and
+		# worth it to have the rule follow the theme.
+		"rule_near":  return col("accent")
+		"rule_mid_l": return col_a("chrome_grad_b", 0.35)
+		"rule_mid_r": return col_a("chrome_grad_c", 0.35)
+
+		# The wordmark. TCG is a shade off the two big words so it sits behind
+		# them rather than competing.
+		"wordmark": return col("chrome_fg")
+		"tcg":      return col("field_fg")
+
+		# Both buttons take the game's own faces. New Game IS btn_secondary.
+		"new_game_top": return col("btn_secondary")
+		"new_game_bot": return col("btn_secondary")
+		"new_game_fg":  return col("btn_secondary_fg")
+	# btn_hover, btn_press and fade are genuinely theme-independent: two neutral
+	# state tints and a fade to black. They stay in the constant.
 	return SPLASH.get(key, Color.MAGENTA)
 
 # ─── Type ────────────────────────────────────────────────────────────────────
@@ -674,12 +1708,101 @@ func motion_reduced() -> bool:
 		return false
 	return String(gs.get("reduce_motion_setting")) == "where_possible"
 
+
+## Whether the header and footer bars should be drawn.
+##
+## This hides the BAR'S OWN PAINT ONLY — the gradient and its light bands. Every
+## title, chip and button inside a bar keeps drawing, in the same place, at the
+## same size, in the same colour, so the contents appear to float over the field.
+## The bar also keeps its height, so nothing on any screen moves.
+func bars_hidden() -> bool:
+	var gs := get_node_or_null("/root/GameState")
+	if gs == null:
+		return false
+	if not ("hide_bars_setting" in gs):
+		return false
+	return String(gs.get("hide_bars_setting")) == "yes"
+
 # ─── Theme switching ─────────────────────────────────────────────────────────
 
-## Not reachable from any UI — there is no theme picker and the spec says not to
-## build one yet. It exists so the parked themes are exercisable from the debug
-## console, and so screens are written to listen for a change rather than to
-## assume there will never be one.
+## The player-facing name for a theme id. Falls back to title-casing the id, so
+## a theme added to THEMES without a THEME_NAMES entry still reads properly on
+## the Options screen instead of showing as "midnight_reef".
+func theme_display_name(theme_id: String) -> String:
+	if THEME_NAMES.has(theme_id):
+		return String(THEME_NAMES[theme_id])
+	var words: PackedStringArray = []
+	for part in theme_id.split("_", false):
+		words.append(part.capitalize())
+	return " ".join(words)
+
+
+## Every theme id, in declaration order.
+func theme_ids() -> Array:
+	return THEMES.keys()
+
+
+# ─── Look and mode ───────────────────────────────────────────────────────────
+# Every theme id is `<look>_<mode>` — "umbreon_dark", "sunset_light". The Options
+# picker offers those as TWO rows rather than one, because sixteen buttons each
+# reading "Umbreon Dark" is a wall of long labels where eight short ones plus a
+# Dark/Light pair says the same thing.
+#
+# Both halves are derived by walking THEMES. Adding a look, or a third mode, is
+# still a data change with no edit to the picker.
+
+## The look half of an id. "umbreon_dark" -> "umbreon".
+func theme_look_of(theme_id: String) -> String:
+	var cut := theme_id.rfind("_")
+	return theme_id.substr(0, cut) if cut > 0 else theme_id
+
+
+## The mode half of an id. "umbreon_dark" -> "dark".
+func theme_mode_of(theme_id: String) -> String:
+	var cut := theme_id.rfind("_")
+	return theme_id.substr(cut + 1) if cut > 0 else ""
+
+
+## Every look, once each, in declaration order.
+func theme_looks() -> Array:
+	var out: Array = []
+	for theme_id in THEMES.keys():
+		var look := theme_look_of(String(theme_id))
+		if not (look in out):
+			out.append(look)
+	return out
+
+
+## Every mode, once each, in the order they first appear.
+func theme_modes() -> Array:
+	var out: Array = []
+	for theme_id in THEMES.keys():
+		var mode := theme_mode_of(String(theme_id))
+		if mode != "" and not (mode in out):
+			out.append(mode)
+	return out
+
+
+## Puts a look and a mode back together. If that pairing does not exist — a look
+## that ships in only one mode — the first id with the right look wins, so the
+## picker can never land on a theme that is not there.
+func compose_theme(look: String, mode: String) -> String:
+	var wanted := "%s_%s" % [look, mode]
+	if THEMES.has(wanted):
+		return wanted
+	for theme_id in THEMES.keys():
+		if theme_look_of(String(theme_id)) == look:
+			return String(theme_id)
+	return DEFAULT_THEME
+
+
+## Title-cased name for one half of an id, for the two picker rows.
+func theme_part_name(part: String) -> String:
+	return part.capitalize()
+
+
+## Switch theme. Prefer GameState.set_ui_theme(), which also persists the choice
+## — this is the raw setter and does not touch the save file.
 func set_theme(theme_name: String) -> void:
 	if not THEMES.has(theme_name):
 		push_warning("UITheme: unknown theme '%s'" % theme_name)

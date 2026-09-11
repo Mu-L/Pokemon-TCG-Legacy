@@ -41,33 +41,55 @@ uniform vec4  tint_bottom     : source_color = vec4(0.961, 0.475, 0.231, 0.16); 
 uniform vec2  tint_bottom_centre = vec2(0.50, 1.12);
 uniform vec2  tint_bottom_radius = vec2(1.05, 0.80);
 
-// Chevrons — larger and slower than the bars' so the two layers read as
-// separate planes rather than one moving surface.
+// Chevrons — larger and slower than the bars' so the two layers read as separate
+// planes rather than one moving surface. Hard-edged, antialiased by one pixel;
+// see the note at the top of UI_Chrome_Bar.gdshader for why the edge is hard and
+// what the one pixel is for.
 uniform vec4  stripe_color : source_color = vec4(1.0, 1.0, 1.0, 0.026);
 uniform float angle_deg    = 115.0;
-uniform float stripe_width = 18.0;
-uniform float period       = 74.0;
-uniform float scroll_speed = -5.3;   // px/s along +X; negative scrolls LEFT
+uniform float stripe_width = 18.0;    // px of ink
+uniform float period       = 74.0;    // px from one stripe's start to the next
+uniform float scroll_speed = -5.833;  // px/s along +X; negative scrolls LEFT
 
 uniform vec2 rect_size = vec2(1920.0, 1080.0);
 
-// Falloff of a radial in UV space. 1.0 at the centre, 0.0 at the ellipse edge,
-// smoothstepped so there is no visible ring.
-float radial(vec2 uv, vec2 centre, vec2 radius) {
-	vec2 d = (uv - centre) / max(radius, vec2(0.0001));
-	return 1.0 - smoothstep(0.0, 1.0, length(d));
+// Falloff of a radial in UV space. 1.0 at the centre, 0.0 once `stop` of the way
+// across the ellipse.
+//
+// ── LINEAR, NOT SMOOTHSTEP, AND IT STOPS EARLY ───────────────
+// This used to be `1 - smoothstep(0, 1, length(d))`, which was wrong twice over
+// and was the single biggest reason the field read as an even haze instead of
+// four distinct pools of light.
+//
+// Smoothstep eases in AND out, so a crisp centre became a soft dome. And running
+// the ramp all the way to the ellipse edge made every wash about 1.5x wider than
+// intended and correspondingly weaker at its core. A linear ramp that reaches
+// zero at 65% of the radius (62% for the tints) is what the design actually
+// specifies. Centres and radii are unchanged.
+float radial(vec2 uv, vec2 centre, vec2 radius, float stop) {
+	vec2 d = (uv - centre) / max(radius * stop, vec2(0.0001));
+	return clamp(1.0 - length(d), 0.0, 1.0);
 }
+
+// How far across its own ellipse each layer fades out.
+const float WASH_STOP = 0.65;
+const float TINT_STOP = 0.62;
 
 void fragment() {
 	vec3 col = base_color.rgb;
 
 	// Washes: opaque colour, so mix by the falloff alone.
-	col = mix(col, wash_left.rgb,  radial(UV, wash_left_centre,  wash_left_radius)  * wash_left.a);
-	col = mix(col, wash_right.rgb, radial(UV, wash_right_centre, wash_right_radius) * wash_right.a);
+	//
+	// RIGHT FIRST, THEN LEFT. The order decides which one wins where they
+	// overlap, and it used to be the other way round — which is why the lower
+	// left of the field came out colder than it should on every theme.
+	col = mix(col, wash_right.rgb, radial(UV, wash_right_centre, wash_right_radius, WASH_STOP) * wash_right.a);
+	col = mix(col, wash_left.rgb,  radial(UV, wash_left_centre,  wash_left_radius,  WASH_STOP) * wash_left.a);
 
-	// Tints: alpha-over, so the falloff multiplies the colour's own alpha.
-	col = mix(col, tint_top.rgb,    radial(UV, tint_top_centre,    tint_top_radius)    * tint_top.a);
-	col = mix(col, tint_bottom.rgb, radial(UV, tint_bottom_centre, tint_bottom_radius) * tint_bottom.a);
+	// Tints: alpha-over, so the falloff multiplies the colour's own alpha. Top
+	// before bottom, so the bottom wins the overlap.
+	col = mix(col, tint_top.rgb,    radial(UV, tint_top_centre,    tint_top_radius,    TINT_STOP) * tint_top.a);
+	col = mix(col, tint_bottom.rgb, radial(UV, tint_bottom_centre, tint_bottom_radius, TINT_STOP) * tint_bottom.a);
 
 	// Chevrons, in pixel space so they never stretch with the rect.
 	vec2  p = UV * rect_size;
