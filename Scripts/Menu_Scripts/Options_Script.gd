@@ -107,6 +107,23 @@ var section_setters : Dictionary = {}
 var save_btn   : Button
 var cancel_btn : Button
 
+# ─── HOSTED IN A MATCH (the ESC pause menu) ──────────────────
+# Main_Match_Core_Gameplay_Script opens this screen as an overlay on top of the
+# live board. Both are set on the instance BEFORE it is added to the tree, so
+# _ready() and _build_rows() already see them.
+#
+#   in_match_mode          drops the two rows that decide how the match in
+#                          progress is played - Confusion rules and Burn rules -
+#                          so nothing on screen implies they can be changed
+#                          mid-match. Every other row stays live. It also keeps
+#                          this screen's own music off, so the battle theme
+#                          carries on underneath instead of two tracks at once.
+#   close_overlay_callback the host's "put the pause menu back" call. When it is
+#                          set, _leave() calls it instead of taking the map /
+#                          main-menu return path, which would tear the match down.
+var in_match_mode: bool = false
+var close_overlay_callback: Callable = Callable()
+
 @onready var audio_player := AudioStreamPlayer.new()
 
 # Keep this in step with the `step` set on both HSliders below. Without the snap
@@ -130,13 +147,16 @@ func _ready() -> void:
 	# ISSUE #128: every sub-menu plays the same track. This screen had none, so it ran on
 	# whatever the main menu was still playing behind it -- and once that overlap was fixed
 	# (Main_Menu_Script.pause_music) it would have been left silent instead.
-	add_child(audio_player)
-	var audio_stream = load(SoundManagerScript.BGM_COIN_MODE)
-	audio_player.stream = audio_stream
-	audio_player.bus = SoundManagerScript.MUSIC_BUS
-	if audio_stream != null:
-		audio_stream.loop = true
-		audio_player.play()
+	# Not in a match: there the battle theme is still playing under the pause menu
+	# and is the track that belongs to the screen the player is looking at.
+	if not in_match_mode:
+		add_child(audio_player)
+		var audio_stream = load(SoundManagerScript.BGM_COIN_MODE)
+		audio_player.stream = audio_stream
+		audio_player.bus = SoundManagerScript.MUSIC_BUS
+		if audio_stream != null:
+			audio_stream.loop = true
+			audio_player.play()
 
 	theme = UIKit.base_theme()
 
@@ -236,15 +256,23 @@ func _build_rows() -> void:
 	body.alignment = BoxContainer.ALIGNMENT_CENTER
 	scroll.add_child(body)
 
-	_add_button_row(body, "confusion", "Confusion rules", [
-		["base_set_confusion_rules",   "Base set"],
-		["fairer_confusion_rules",     "Fairer retreat"],
-		["modern_era_confusion_rules", "EX era"],
-	])
-	_add_button_row(body, "burn", "Burn rules", [
-		["base_set_burn_rules",   "Base set"],
-		["modern_era_burn_rules", "EX era"],
-	])
+	# THE TWO MATCH-RULE ROWS ARE HIDDEN IN A MATCH. Both decide how the game
+	# being played right now resolves a status condition, and the engine reads
+	# them as it goes — a change part-way through would apply to the second half
+	# of the match only. Rather than show them disabled, they are not built at
+	# all, so the pause menu never implies they are on the table. Their entries in
+	# pending/saved and section_setters stay exactly as they are: nothing touches
+	# them, so Save sees no change and writes nothing.
+	if not in_match_mode:
+		_add_button_row(body, "confusion", "Confusion rules", [
+			["base_set_confusion_rules",   "Base set"],
+			["fairer_confusion_rules",     "Fairer retreat"],
+			["modern_era_confusion_rules", "EX era"],
+		])
+		_add_button_row(body, "burn", "Burn rules", [
+			["base_set_burn_rules",   "Base set"],
+			["modern_era_burn_rules", "EX era"],
+		])
 	_add_button_row(body, "walking", "Walking speed", [
 		["very_slow", "Very slow"],
 		["slow",      "Slow"],
@@ -650,5 +678,10 @@ func _on_cancel_pressed() -> void:
 
 func _leave() -> void:
 	_revert_live_changes()
+	# Opened over a live match: the host owns this overlay and puts its own pause
+	# menu back. Checked first — neither path below is survivable mid-match.
+	if close_overlay_callback.is_valid():
+		close_overlay_callback.call()
+		return
 	if GameState.close_sub_menu(): return   # ISSUE #52: map is still loaded behind us — just pop this overlay
 	SceneCache.change_scene("res://Scenes/Main_Menu_Scenes/Main_Menu_Scene.tscn")

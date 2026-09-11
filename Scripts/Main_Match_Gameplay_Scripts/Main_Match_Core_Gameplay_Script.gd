@@ -286,6 +286,12 @@ var opponent_sleeve_border_color: Color = Color(0.15, 0.15, 0.15, 1.0)
 # The ESC forfeit confirmation popup, or null when it isn't up. See _show_forfeit_dialog().
 var forfeit_dialog: CanvasLayer = null
 
+# The ESC pause menu (Options / Forfeit / Close), or null when it isn't up. Stays
+# alive but hidden while the options overlay is on top of it. See _show_pause_menu().
+var pause_menu: CanvasLayer = null
+# The Options screen, opened from the pause menu as an overlay over the board.
+var options_overlay: CanvasLayer = null
+
 # --- Card zoom (hold Shift to enlarge whatever the mouse is over) ------------
 # The same hold-to-preview the deck builder, coin case, sleeve and costume screens use,
 # brought onto the match board: hold the key and slide the mouse and the enlarged image
@@ -5018,6 +5024,161 @@ func end_game() -> void:
 		GameState.clear_match_series()
 	game_end_logic(true)
 
+# ─── ESC pause menu ──────────────────────────────────────────────────────────────────────
+# Escape used to go straight to the forfeit question, which made the key that backs out of
+# every other screen in the game a one-step route to throwing the match, and left the player
+# with no way to reach the options while a battle was on. It opens this instead: the same
+# popup shape as the main menu's "Quit the game?" dialog, with three ways out.
+#
+#   Options   the real options screen, over the board, minus the two match-rule rows
+#             (Options_Script.in_match_mode). The pause menu is hidden, not freed, and
+#             comes back when the options screen leaves.
+#   Forfeit   the original confirmation, unchanged — _show_forfeit_dialog().
+#   Close     back to the board.
+#
+# Nothing here pauses the SceneTree. The match is mid-await in several places and a paused
+# tree would freeze those timers with the board half-resolved; the guards on the Escape
+# branch in _input() already keep this out of the moments where that would matter.
+const OPTIONS_SCENE_PATH := "res://Scenes/Main_Menu_Scenes/Options_Scene.tscn"
+
+func _show_pause_menu() -> void:
+	if pause_menu != null and is_instance_valid(pause_menu):
+		return
+	if forfeit_dialog != null and is_instance_valid(forfeit_dialog):
+		return
+
+	pause_menu = CanvasLayer.new()
+	pause_menu.layer = 100
+	add_child(pause_menu)
+
+	# 0.78, the dim every other modal in the game uses. ColorRect stops the mouse, so
+	# this is also what keeps a click off the board behind — and it is FIRST in the
+	# child list, so the panel on top of it is still picked first.
+	var overlay := ColorRect.new()
+	overlay.color = Color(0, 0, 0, 0.78)
+	overlay.anchor_right  = 1.0
+	overlay.anchor_bottom = 1.0
+	pause_menu.add_child(overlay)
+
+	# Tall and narrow: the three actions are a stacked column, not a button row. A column
+	# reads as a menu — one choice per line, all the same width — where a row of three reads
+	# as a question with two answers and something else bolted on the end.
+	var panel := UIKit.make_modal_panel()
+	panel.custom_minimum_size = Vector2(420, 380)
+	panel.anchor_left   = 0.5
+	panel.anchor_top    = 0.5
+	panel.anchor_right  = 0.5
+	panel.anchor_bottom = 0.5
+	panel.offset_left   = -210
+	panel.offset_top    = -190
+	panel.offset_right  = 210
+	panel.offset_bottom = 190
+	pause_menu.add_child(panel)
+
+	var vbox := VBoxContainer.new()
+	vbox.add_theme_constant_override("separation", 24)
+	vbox.alignment = BoxContainer.ALIGNMENT_CENTER
+	panel.add_child(vbox)
+
+	var msg := Label.new()
+	UIKit.set_label(msg, "body", "Match paused", "field_fg")
+	msg.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	vbox.add_child(msg)
+
+	# The buttons are a CENTRED column, so each one keeps its own width rather than being
+	# stretched to the panel by the VBox. A BoxContainer overrules the size you set on its
+	# children along its own axis; across it, custom_minimum_size.x is honoured.
+	var btn_col := VBoxContainer.new()
+	btn_col.alignment = BoxContainer.ALIGNMENT_CENTER
+	btn_col.add_theme_constant_override("separation", 14)
+	vbox.add_child(btn_col)
+
+	for spec in [
+		["Options", "primary",   _on_pause_options_pressed],
+		["Forfeit", "danger",    _on_pause_forfeit_pressed],
+		["Close",   "secondary", _close_pause_menu],
+	]:
+		var btn := UIKit.make_footer_button(spec[0], spec[1])
+		btn.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+		btn.pressed.connect(spec[2])
+		btn_col.add_child(btn)
+
+
+func _close_pause_menu() -> void:
+	_close_options_overlay(false)
+	if pause_menu != null and is_instance_valid(pause_menu):
+		remove_child(pause_menu)   # before free: the queue_free-without-remove_child trap
+		pause_menu.queue_free()
+	# Cleared now rather than at end of frame, so the _input() guard stops swallowing
+	# gameplay input on this very frame.
+	pause_menu = null
+
+
+func _on_pause_forfeit_pressed() -> void:
+	_close_pause_menu()
+	_show_forfeit_dialog()
+
+
+## Opens the shared options screen over the board. The instance is configured BEFORE it is
+## added to the tree, because both flags are read in its _ready() and _build_rows().
+func _on_pause_options_pressed() -> void:
+	if options_overlay != null and is_instance_valid(options_overlay):
+		return
+
+	var packed: PackedScene = SceneCache.get_packed_scene(OPTIONS_SCENE_PATH)
+	if packed == null:
+		packed = load(OPTIONS_SCENE_PATH)
+	if packed == null:
+		push_error("Match: could not load the options scene " + OPTIONS_SCENE_PATH)
+		return
+
+	if pause_menu != null and is_instance_valid(pause_menu):
+		pause_menu.visible = false   # kept loaded, just out of sight
+
+	options_overlay = CanvasLayer.new()
+	options_overlay.layer = 101   # above the pause menu (100), below the card preview (150)
+	add_child(options_overlay)
+
+	# UIKit.add_field() — the options screen's own background — is MOUSE_FILTER_IGNORE, so
+	# without this every click that lands on empty space on that screen would fall through
+	# to the board underneath. FIRST in the child list: it draws behind the screen and is
+	# picked after it, so it catches only what the screen itself ignores.
+	var blocker := ColorRect.new()
+	blocker.color = Color(0, 0, 0, 1)
+	blocker.anchor_right  = 1.0
+	blocker.anchor_bottom = 1.0
+	options_overlay.add_child(blocker)
+
+	var instance: Node = packed.instantiate()
+	if instance is Control:
+		instance.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	instance.in_match_mode = true
+	instance.close_overlay_callback = _close_options_overlay
+	options_overlay.add_child(instance)
+
+
+# restore_menu: true on the normal "back" path, which brings the pause menu back; false when
+# the whole stack is being torn down by _close_pause_menu().
+func _close_options_overlay(restore_menu: bool = true) -> void:
+	if options_overlay != null and is_instance_valid(options_overlay):
+		remove_child(options_overlay)
+		options_overlay.queue_free()
+	options_overlay = null
+	if not restore_menu:
+		return
+
+	# REBUILT, NOT JUST UNHIDDEN. Every colour on these buttons is baked in at build time —
+	# the button faces are generated art per theme, not a runtime tint — so a pause menu that
+	# was merely hidden comes back still wearing whatever theme was in effect when the player
+	# opened the options. Throwing it away and building it again picks up the theme they just
+	# saved. This is the same thing the options screen does to itself in _rebuild().
+	if pause_menu != null and is_instance_valid(pause_menu):
+		remove_child(pause_menu)
+		pause_menu.queue_free()
+	pause_menu = null
+	_show_pause_menu()
+
+
 # ─── Forfeit confirmation ────────────────────────────────────────────────────────────────
 # Same shape as the main menu's "Quit the game?" popup (Main_Menu_Script._show_quit_dialog):
 # a layer-100 CanvasLayer, a 60% black dim over the whole screen, a centred PanelContainer,
@@ -5680,6 +5841,11 @@ func apply_energy_attach_match_effects(target_pokemon: card_object, is_opponent:
 func game_end_logic(loser_is_player: bool, is_draw: bool = false) -> void:
 	# Set the flag immediately so no other async functions continue processing
 	game_is_over = true
+
+	# The CPU can finish the match while the player is sitting in the pause menu. That menu
+	# swallows every event, so left up it would eat the clicks the game-over message and the
+	# outro need. Torn down here, along with the options screen if it is on top of it.
+	_close_pause_menu()
 
 	# ISSUE #61: "My game, my rules" — any draw (both players out simultaneously) is a LOSS for the
 	# player, matching the Pokémon TCG GB game logic. Never awards a win on a tie.
@@ -10056,6 +10222,24 @@ func _input(event: InputEvent) -> void:
 		get_viewport().set_input_as_handled()
 		return
 
+	# While the pause menu is up it owns the screen: every event returns here rather than
+	# reaching the board, so a click or a stray key can't play the match underneath it.
+	#
+	# NOTHING IS CONSUMED EXCEPT THE ESCAPE THIS BRANCH ACTS ON. _input() runs before GUI
+	# picking, so marking a click handled here would take it away from the menu's own
+	# buttons — and from the options screen's, while that is on top. Both are Controls on a
+	# CanvasLayer above the board, and the dim behind each of them stops the mouse, so
+	# returning uncaptured is enough to keep the board out of it.
+	#
+	# Escape is left alone while the options screen is up: that screen handles its own
+	# (Options_Script._input) and closes back to this menu.
+	if pause_menu != null and is_instance_valid(pause_menu):
+		var options_up: bool = options_overlay != null and is_instance_valid(options_overlay)
+		if not options_up and UIInput.is_cancel(event):
+			get_viewport().set_input_as_handled()
+			_close_pause_menu()
+		return
+
 	# While the forfeit confirmation is up it owns the screen: swallow all gameplay input so
 	# a click can't acknowledge a message box, cancel a mode or move a card underneath it.
 	# The dialog's own buttons are Controls, and GUI input is processed AFTER _input(), so
@@ -10104,9 +10288,10 @@ func _input(event: InputEvent) -> void:
 				cancel_button.pressed.emit()
 			return
 
-	# ESC = forfeit the match, behind a confirmation. This used to call end_game() directly,
-	# so one stray press of the key that backs out of every menu in the game instantly threw
-	# the match. Three guards beyond the prompt itself:
+	# ESC = the pause menu (Options / Forfeit / Close), see _show_pause_menu(). Forfeit is one
+	# of its three buttons and still asks for confirmation, so the key that backs out of every
+	# menu in the game is now two deliberate steps away from throwing the match rather than
+	# one. Three guards beyond the menu itself:
 	#   - game_is_over: the result is already decided, there is nothing left to forfeit.
 	#   - msgbox visible: game_end_logic() awaits its own show_message(), and the pending
 	#     await belonging to whatever is on screen right now would never be resolved.
@@ -10116,7 +10301,7 @@ func _input(event: InputEvent) -> void:
 	# below already use.
 	if event is InputEventKey and event.pressed and event.keycode == KEY_ESCAPE:
 		if not game_is_over and not msgbox_container.visible and not coin_container.visible:
-			_show_forfeit_dialog()
+			_show_pause_menu()
 		return
 
 	# Dev cheat keys — 9 = instant win, 0 = instant lose, D = both draw, S = both shuffle,
