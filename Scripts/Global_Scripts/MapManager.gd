@@ -977,6 +977,10 @@ func handle_message_accept() -> void:
 		return
 	if not message_panel.visible:
 		return
+	# Still typing: the first press finishes the line rather than dismissing a message the player
+	# has not finished reading. The second press does what it always did.
+	if message_panel.advance_consumed():
+		return
 	# ISSUE #126: there is no OK button to test any more -- the box itself reports which kind
 	# it is. ok_armed is false while a gift reveal is still animating.
 	if message_panel.is_ok_mode():
@@ -992,6 +996,8 @@ func handle_message_cancel() -> void:
 		_close_validation_popup()
 		return
 	if not message_panel.visible:
+		return
+	if message_panel.advance_consumed():
 		return
 	# A plain OK box has nothing to say no to, so cancel just dismisses it.
 	if message_panel.is_ok_mode():

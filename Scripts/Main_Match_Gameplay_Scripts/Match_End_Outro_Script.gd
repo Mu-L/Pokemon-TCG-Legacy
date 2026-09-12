@@ -279,8 +279,11 @@ func _input(event: InputEvent) -> void:
 			get_viewport().set_input_as_handled()
 			return
 		if click_enabled and not transitioning:
-			player_clicked.emit()
 			get_viewport().set_input_as_handled()
+			# A panel still typing its line out spends this input on finishing it.
+			if _skip_panel_typing():
+				return
+			player_clicked.emit()
 		return
 
 	# ISSUE #135 FIX: UIInput.is_click() is "a real mouse button went down" -- it filters out the
@@ -295,8 +298,11 @@ func _input(event: InputEvent) -> void:
 			get_viewport().set_input_as_handled()
 			return
 		if click_enabled and not transitioning:
-			player_clicked.emit()
 			get_viewport().set_input_as_handled()
+			# A panel still typing its line out spends this input on finishing it.
+			if _skip_panel_typing():
+				return
+			player_clicked.emit()
 
 # ISSUE #33 FIX: awaits a tween, but returns early (killing the tween) if the player clicks to skip.
 # Uses the finished signal for natural completion and polls _skip_anim each frame for the skip.
@@ -814,6 +820,14 @@ func _create_msg_panels() -> void:
 	var opp_name := str(opponent_data.get("name", ""))
 	if opp_name != "":
 		_dialogue_panel.set_name_pill(opp_name, str(opponent_data.get("sprite", "")))
+## Finishes whichever panel is on screen and still typing. True when the input was spent doing it.
+func _skip_panel_typing() -> bool:
+	for panel in [_dialogue_panel, _gift_panel]:
+		if panel != null and is_instance_valid(panel) and panel.advance_consumed():
+			return true
+	return false
+
+
 func _show_dialogue_message(text: String) -> void:
 	if _dialogue_panel == null:
 		return

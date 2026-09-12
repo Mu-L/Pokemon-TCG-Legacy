@@ -3,7 +3,7 @@ extends Control
 # ============================================================
 # OPTIONS
 # ============================================================
-# Eleven rows, each a label on the left and its control group on the right.
+# Twelve rows, each a label on the left and its control group on the right.
 # Everything fits between the bars with nothing to scroll — see _build_rows().
 #
 # ── BUILT IN CODE, NOT IN THE SCENE ──────────────────────────
@@ -79,11 +79,11 @@ const LABEL_W      := 370.0    # the label column
 const LABEL_GAP    := 40.0     # label column -> first control
 # 10% tighter was 30.6 and left the last row clipped. Trimmed further until the
 # whole page fits between the bars with nothing to scroll.
-const ROW_GAP      := 27.0     # between rows
+const ROW_GAP      := 20.0     # between rows
 const OPTION_GAP   := 18.0     # between the buttons inside one row
 const SLIDER_W     := 690.0
 const VALUE_W      := 90.0     # the "80%" readout, wide enough for "100%"
-const ROW_MIN_H    := 55.8     # so a slider row and a button row match (10% shorter)
+const ROW_MIN_H    := 53.0     # so a slider row and a button row match
 
 # The row labels keep small_label's mono caps — it reads as a form label rather
 # than a heading — but at a larger size than the role's own 13.5, which left the
@@ -168,6 +168,7 @@ func _ready() -> void:
 		"burn":         GameState.set_burn_rule,
 		"walking":      GameState.set_walking_speed,
 		"animation":    GameState.set_animation_speed,
+		"text_speed":   GameState.set_text_speed,
 		"reduce_motion": GameState.set_reduce_motion,
 		"intro_outro":  GameState.set_intro_outro,
 		# The two volume entries wrap their setter because this screen counts in whole percents
@@ -231,6 +232,10 @@ func _build_rows() -> void:
 	# longer fit in the 896px band, and the last of them would simply have been
 	# drawn past the footer.
 	#
+	# ROW_GAP and ROW_MIN_H are what keep the CURRENT twelve rows on one screen with
+	# nothing to scroll: 12 * 53 + 11 * 20 = 856 of the 896px available. A thirteenth
+	# row means trimming one of those two again.
+	#
 	# A ScrollContainer takes the overflow. It only scrolls when there IS overflow,
 	# so on a short list the block still sits centred exactly as before: the VBox
 	# inside is SIZE_EXPAND_FILL with ALIGNMENT_CENTER, which centres it in the
@@ -284,6 +289,15 @@ func _build_rows() -> void:
 		["medium", "Medium"],
 		["fast",   "Fast"],
 	])
+	# How fast a message box types its letters out. Its own row rather than a step on
+	# the animation ladder above: reading pace and watching pace are different
+	# preferences. Reduce motion still overrides it - the row below turns typing off
+	# along with every other animation.
+	_add_button_row(body, "text_speed", "Text speed", [
+		["slow",   "Slow"],
+		["medium", "Medium"],
+		["fast",   "Fast"],
+	], "(how fast messages type out)")
 	# The stored value stays "where_possible" — it is the key GameState persists and
 	# the one UITheme.motion_reduced() compares against. Only the label is "On".
 	# ISSUE #275: "Reduce motion" is the only row on this screen whose name does not
@@ -460,6 +474,7 @@ func _current_values() -> Dictionary:
 		"burn":          GameState.burn_rule_setting,
 		"walking":       GameState.walking_speed_setting,
 		"animation":     GameState.animation_speed_setting,
+		"text_speed":    GameState.text_speed_setting,
 		"reduce_motion": GameState.reduce_motion_setting,
 		"intro_outro":   GameState.intro_outro_setting,
 		"music_volume":  _to_percent(GameState.music_volume_setting),

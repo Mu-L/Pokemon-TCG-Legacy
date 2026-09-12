@@ -203,6 +203,21 @@ var _mode: String = "none"
 # For OK boxes that must ignore a dismiss for a while (the gift reveal animates first).
 var ok_armed: bool = true
 
+# ── TYPEWRITER ────────────────────────────────────
+# Every message types itself out one letter at a time. The text is set in FULL and the reveal is
+# done with RichTextLabel.visible_characters, which means nothing about layout changes: the panel
+# is still sized, the font still fitted and the label still centred against the WHOLE line, so the
+# box does not grow or reflow as the letters land.
+#
+# The pace is GameState.text_letter_delay (seconds per letter), which the Options "Text speed" row
+# drives and reduce motion collapses to 0.0 = instant.
+#
+# _type_progress counts LETTERS, not seconds, so a mid-message change of speed takes effect on the
+# next frame without losing what is already on screen.
+var _typing: bool = false
+var _type_progress: float = 0.0
+var _type_total: int = 0
+
 # sprite name -> cropped idle-down AtlasTexture. Built once per sprite sheet;
 # the opaque-bounds scan is cheap but there is no reason to redo it every time
 # the player talks to the same person.
@@ -297,7 +312,13 @@ func configure(box_height: float = 138.0,
 	label.scroll_active  = false
 	label.fit_content    = false
 	label.mouse_filter   = Control.MOUSE_FILTER_IGNORE
+	# AFTER_SHAPING, not the default BEFORE_SHAPING: the line breaks are worked out from the full
+	# text and the reveal only trims what is drawn. With the default, each new letter re-wraps the
+	# paragraph and the words jump about as the message types itself.
+	label.visible_characters_behavior = TextServer.VC_CHARS_AFTER_SHAPING
 	_text_box.add_child(label)
+	# The typewriter is the only thing this node processes, and it arms itself in _start_typing().
+	set_process(false)
 
 	# -- Advance caret ----------------------------------------
 	_caret = AdvanceCaret.new()
@@ -345,7 +366,7 @@ func set_system_variant(is_system: bool) -> void:
 		_name_sprite = ""
 	apply_theme(_theme_key)
 	if _body_text != "":
-		set_body_text(_body_text, _body_ceiling)
+		set_body_text(_body_text, _body_ceiling, false)
 	else:
 		_layout_panel()
 
@@ -467,7 +488,7 @@ func set_panel_bottom(new_bottom: float) -> void:
 		return
 	_panel_bottom = new_bottom
 	if _body_text != "":
-		set_body_text(_body_text, _body_ceiling)
+		set_body_text(_body_text, _body_ceiling, false)
 	else:
 		_layout_panel()
 
@@ -955,7 +976,10 @@ func _resolve_tokens(text: String) -> String:
 	return out
 
 
-func set_body_text(text: String, max_font_size: int = -1) -> void:
+## `retype` is false only for the internal re-layout paths (a variant switch, a panel move), which
+## re-run this with the text that is already on screen. Restarting the typewriter there would rewind
+## a message the player is half-way through reading.
+func set_body_text(text: String, max_font_size: int = -1, retype: bool = true) -> void:
 	# Dialogue tokens ([TIME], [NAME]) resolve here, before anything measures or
 	# parses the string - see _resolve_tokens() above. The RESOLVED text is what
 	# gets cached, so a relayout never re-substitutes.
@@ -992,6 +1016,96 @@ func set_body_text(text: String, max_font_size: int = -1) -> void:
 
 	_layout_panel()
 	_place_body_label(plain, size)
+
+	if retype:
+		_start_typing()
+	else:
+		_preserve_typing()
+
+
+# ============================================================
+# TYPEWRITER
+# ============================================================
+
+## Begins revealing the current body text one letter at a time. Called by every set_body_text(),
+## which is the single funnel every message in the game goes through - overworld, NPC, opponent,
+## system and in-match alike.
+func _start_typing() -> void:
+	if label == null:
+		return
+	_type_total = label.get_total_character_count()
+	_type_progress = 0.0
+	# 0.0 is reduce motion (and any future "instant" preset): show the line whole.
+	if _letter_delay() <= 0.0 or _type_total <= 0:
+		finish_typing()
+		return
+	_typing = true
+	label.visible_characters = 0
+	set_process(true)
+
+
+## A re-layout with the same text. The character COUNT can change (a variant switch re-wraps the
+## bbcode), so the cap is re-read, but the progress is kept exactly where it was.
+func _preserve_typing() -> void:
+	if label == null:
+		return
+	_type_total = label.get_total_character_count()
+	if not _typing:
+		label.visible_characters = -1
+		return
+	label.visible_characters = mini(int(_type_progress), _type_total)
+
+
+func _process(delta: float) -> void:
+	if not _typing:
+		set_process(false)
+		return
+	var delay := _letter_delay()
+	if delay <= 0.0:
+		finish_typing()
+		return
+	_type_progress += delta / delay
+	if int(_type_progress) >= _type_total:
+		finish_typing()
+	else:
+		label.visible_characters = int(_type_progress)
+
+
+## True while letters are still landing. The advance handlers ask this so the first click or key
+## press finishes the line instead of dismissing a message that has not been read yet.
+func is_typing() -> bool:
+	return _typing
+
+
+## Reveals the rest of the line immediately.
+func finish_typing() -> void:
+	_typing = false
+	set_process(false)
+	if label != null:
+		label.visible_characters = -1
+
+
+## The one call an advance handler needs: if the box is still typing, finish the line and report
+## that the input was spent on that. Returns false when there was nothing to skip, in which case the
+## caller carries on and dismisses the box as it always did.
+func advance_consumed() -> bool:
+	if visible and _typing:
+		finish_typing()
+		return true
+	return false
+
+
+## Seconds per letter. Read fresh every frame so a change in Options applies to a live box, and
+## reached through the main loop rather than the GameState identifier for the same reason _ui() is -
+## a box is routinely configured before it is in the tree.
+func _letter_delay() -> float:
+	var loop := Engine.get_main_loop()
+	if loop == null:
+		return 0.0
+	var gs = loop.get_root().get_node_or_null("/root/GameState")
+	if gs == null:
+		return 0.0
+	return float(gs.text_letter_delay)
 
 
 func _apply_body_font(size: int) -> void:

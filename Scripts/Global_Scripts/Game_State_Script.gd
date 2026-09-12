@@ -131,6 +131,40 @@ const PACK_SPEED_PRESETS := {
 	"fast": 1.0,
 }
 
+# ── TEXT SPEED ──────────────────────────────────────────────────────────────────────────
+# How fast a message box types its letters out, one at a time. Its own Options row and its own
+# saved key ("text_speed"), deliberately separate from the animation ladder: reading pace is a
+# different preference from watching pace, and a player who wants a brisk match may still want to
+# read at their own speed.
+#
+# TEXT_BASE_LETTER_DELAY is the authored reference pace of one letter every 0.05s. The multiplier
+# DIVIDES it, so a higher number is faster, exactly like the animation tables.
+#
+# The three presets have been TRIPLED TWICE from their first pass (0.5 / 1.0 / 1.5) on play testing
+# — the original "standard" 0.05s per letter read far too slowly in a match. Medium is now 9.0, one
+# letter every ~0.0056s, so a typical line lands in well under half a second and slow (4.5) is three
+# times what "fast" originally was.
+#
+# At this end of the ladder the frame rate is the real limit: medium wants ~180 letters a second and
+# a 60fps frame is 3 of them, so the reveal steps in small chunks rather than single letters. That is
+# expected and is what _process() accumulating FRACTIONAL letters is for — nothing is dropped. Push
+# much past this and the three presets stop being distinguishable from instant.
+#
+# Tune the table, not the base delay: the base is what the ladder is expressed relative to.
+#
+# Reduce motion collapses this to 0.0, which DynamicMessageBox reads as "show the whole line at
+# once" — the same accessibility switch that skips every other animation.
+const TEXT_SPEED_OPTIONS := ["slow", "medium", "fast"]
+# TWEAKABLE — must carry the same three keys as TEXT_SPEED_OPTIONS.
+const TEXT_SPEED_PRESETS := {
+	"slow": 4.5,
+	"medium": 9.0,
+	"fast": 13.5,
+}
+const TEXT_BASE_LETTER_DELAY := 0.05   # seconds per letter at 1.0x
+# The live value every message box reads. 0.0 means instant.
+var text_letter_delay: float = TEXT_BASE_LETTER_DELAY
+
 # Reduce motion. An accessibility switch, not a fourth speed.
 #
 # SKIP_MULTIPLIER is deliberately huge rather than infinite so scaled_duration() collapses every
@@ -151,12 +185,14 @@ const SKIP_MULTIPLIER := 100.0
 # reduce motion keeps the screen and collapses its animations. See is_transition_skipped().
 const INTRO_OUTRO_OPTIONS := ["play", "skip"]
 
+const DEFAULT_TEXT_SPEED      := "medium"
 const DEFAULT_ANIMATION_SPEED := "medium"
 const DEFAULT_REDUCE_MOTION   := "off"
 const DEFAULT_INTRO_OUTRO     := "play"
 
 # The player's currently selected preset keys. Persisted in Player_Current_Data.json.
 var animation_speed_setting: String   = DEFAULT_ANIMATION_SPEED
+var text_speed_setting: String        = DEFAULT_TEXT_SPEED
 var reduce_motion_setting: String     = DEFAULT_REDUCE_MOTION
 var intro_outro_setting: String       = DEFAULT_INTRO_OUTRO
 
@@ -187,6 +223,18 @@ func set_animation_speed(preset: String, save: bool = true) -> void:
 		_save_current_data_field("animation_speed", animation_speed_setting)
 
 
+## Sets the message-box typing speed. The live delay is recomputed in
+## _apply_animation_multipliers() so reduce motion always wins while it is on.
+func set_text_speed(preset: String, save: bool = true) -> void:
+	if not preset in TEXT_SPEED_OPTIONS:
+		push_warning("GameState: unknown text speed preset '" + preset + "'")
+		return
+	text_speed_setting = preset
+	_apply_animation_multipliers()
+	if save:
+		_save_current_data_field("text_speed", text_speed_setting)
+
+
 ## Reduce motion. Overrides the speed preset for as long as it is on, so turning it off must
 ## recompute rather than restore — which is exactly what _apply_animation_multipliers() does.
 func set_reduce_motion(choice: String, save: bool = true) -> void:
@@ -206,10 +254,13 @@ func _apply_animation_multipliers() -> void:
 		card_match_animation_speed = SKIP_MULTIPLIER
 		item_animation_speed = SKIP_MULTIPLIER
 		pack_animation_speed = SKIP_MULTIPLIER
+		# 0.0 is the message box's "no typing, show the whole line at once".
+		text_letter_delay = 0.0
 		return
 	card_match_animation_speed = MATCH_SPEED_PRESETS[animation_speed_setting]
 	item_animation_speed = ITEM_SPEED_PRESETS[animation_speed_setting]
 	pack_animation_speed = PACK_SPEED_PRESETS[animation_speed_setting]
+	text_letter_delay = TEXT_BASE_LETTER_DELAY / float(TEXT_SPEED_PRESETS[text_speed_setting])
 
 
 func set_intro_outro(choice: String, save: bool = true) -> void:
@@ -279,6 +330,11 @@ func _load_animation_speed() -> void:
 	if not preset in ANIMATION_SPEED_OPTIONS:
 		preset = DEFAULT_ANIMATION_SPEED
 	set_animation_speed(preset, false)
+
+	var text_preset: String = str(data.get("text_speed", DEFAULT_TEXT_SPEED))
+	if not text_preset in TEXT_SPEED_OPTIONS:
+		text_preset = DEFAULT_TEXT_SPEED
+	set_text_speed(text_preset, false)
 
 	var intro: String = str(data.get("intro_outro_animation", DEFAULT_INTRO_OUTRO))
 	if not intro in INTRO_OUTRO_OPTIONS:

@@ -3607,6 +3607,13 @@ func _ensure_match_msgbox() -> DynamicMessageBox:
 func _match_msgbox_theme_key() -> String:
 	return MATCH_MSGBOX_THEME
 
+## True when the in-match box was still typing and this input was spent finishing the line.
+func _skip_msgbox_typing() -> bool:
+	if _match_msgbox == null or not is_instance_valid(_match_msgbox):
+		return false
+	return _match_msgbox.advance_consumed()
+
+
 # Displays the message box with given text and pauses execution until the player clicks
 func show_message(message_text: String) -> void:
 	_log_match_message(message_text)
@@ -10265,8 +10272,12 @@ func _input(event: InputEvent) -> void:
 	# The event is consumed so Space/Enter can't also fire "ui_accept" on whatever
 	# button happens to hold focus behind the box.
 	if msgbox_container.visible and UIInput.is_advance(event):
-		message_acknowledged.emit()
 		get_viewport().set_input_as_handled()
+		# The box types its text out a letter at a time, so the first press completes the line and
+		# only the next one acknowledges it. _skip_msgbox_typing() reports which happened.
+		if _skip_msgbox_typing():
+			return
+		message_acknowledged.emit()
 		return
 
 	# ── In-match Yes/No questions ───────────────────────────────────────────────
@@ -10340,8 +10351,10 @@ func _input(event: InputEvent) -> void:
 			return
 
 		if msgbox_container.visible:
-			message_acknowledged.emit()
 			get_viewport().set_input_as_handled()
+			if _skip_msgbox_typing():
+				return
+			message_acknowledged.emit()
 			return
 
 		# ISSUE #88 FIX: right-click is the "back/cancel" button (it will map to controller B/O later).
