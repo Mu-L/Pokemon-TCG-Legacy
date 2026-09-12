@@ -15,6 +15,36 @@ const SPAWN_FROM_CARD_MART               = Vector2(431, 1474)
 const TAXI_START_POS := Vector2(2573.0, 1816.0)
 const TAXI_END_POS   := Vector2(-742.0, 1828.0)
 
+# The intro phone call. Ellie rings while the taxi is still driving in, so the two play together and
+# the drive-by is what she is talking about ("I'll see you drive right on by in a sec").
+#
+# It is an ORDINARY call - the player clicks through her lines at their own pace - so the cutscene
+# cannot assume any particular length for it. It waits once, on the doorstep; see the doorstep wait
+# in _run_taxi_intro().
+#
+# TWEAKABLE. The delay is measured from the first frame of the cutscene: long enough for the 3s fade
+# from black to be well under way, early enough that the whole call lands before the taxi stops. The
+# call is roughly 17.5s at the default text speed and the drive is 20s, so there is room either way -
+# and if a slow text speed overruns it, _run_taxi_intro() waits for it rather than talking over the
+# player's first steps. See Phone_Call.gd for the call itself and Phone_Calls.json for the script.
+const INTRO_CALL_ID    := "ellie_intro"
+const INTRO_CALL_DELAY := 1.2
+
+# TWEAKABLE - the drive itself.
+#   DRIVE_TIME  the long constant-speed run in. Raising it slows the taxi down; the distance is
+#               fixed, so time and speed are the same dial.
+#   STOP_TIME   the deceleration to a halt.
+#   DRIVE_SPEED_MATCH keeps the two joined smoothly: it is the fraction of the way along at which
+#               phase one hands over, chosen so the EASE_OUT of phase two BEGINS at exactly phase
+#               one's speed. It falls out of the two times as f / DRIVE_TIME = 2(1 - f) / STOP_TIME,
+#               so scaling BOTH times together (as the 10% slow-down did) leaves it correct - but
+#               changing only one of them means re-deriving it, or the taxi visibly jerks.
+const DRIVE_TIME         := 18.7
+const STOP_TIME          := 3.3
+const DRIVE_SPEED_MATCH  := 34.0 / 37.0
+# The fade up from black at the top of the cutscene.
+const INTRO_FADE_TIME    := 2.4
+
 # Taxi intro state
 var _cutscene_active: bool  = false
 var _taxi_intro_phase: bool = false
@@ -22,6 +52,7 @@ var _taxi_exit_phase: bool  = false
 var _taxi_base_pos: Vector2 = Vector2.ZERO
 var _taxi_bob_timer: float  = 0.0
 var _taxi_current_bob: float = 0.0
+var _intro_call: PhoneCall = null
 
 func _allow_menu_open(_is_enter: bool) -> bool:
 	return not _cutscene_active
@@ -93,18 +124,20 @@ func _run_taxi_intro() -> void:
 
 	# Fade in from black over 3 seconds
 	var fade_tween := create_tween()
-	fade_tween.tween_property(self, "modulate", Color.WHITE, 3.0)
+	fade_tween.tween_property(self, "modulate", Color.WHITE, INTRO_FADE_TIME)
 
 	SoundManagerScript.play_sfx(SoundManagerScript.SFX_taxi_intro)
 
-	# Phase 1 — constant speed for 17 s
-	# Fraction 34/37 ensures phase 2 EASE_OUT starts at exactly phase 1's speed
-	var phase1_end := TAXI_START_POS.lerp(TAXI_END_POS, 34.0 / 37.0)
+	# Started, not awaited: the taxi keeps driving underneath the call.
+	_start_intro_phone_call()
+
+	# Phase 1 — constant speed. See DRIVE_SPEED_MATCH for why the hand-over sits where it does.
+	var phase1_end := TAXI_START_POS.lerp(TAXI_END_POS, DRIVE_SPEED_MATCH)
 	var move_tween := create_tween()
-	move_tween.tween_property(self, "_taxi_base_pos", phase1_end, 17.0) \
+	move_tween.tween_property(self, "_taxi_base_pos", phase1_end, DRIVE_TIME) \
 		.set_trans(Tween.TRANS_LINEAR)
-	# Phase 2 — decelerate to a halt over 3 s (EASE_OUT starts at phase 1 speed)
-	move_tween.tween_property(self, "_taxi_base_pos", TAXI_END_POS, 3.0) \
+	# Phase 2 — decelerate to a halt (EASE_OUT starts at phase 1's speed)
+	move_tween.tween_property(self, "_taxi_base_pos", TAXI_END_POS, STOP_TIME) \
 		.set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
 	await move_tween.finished
 
@@ -127,6 +160,21 @@ func _run_taxi_intro() -> void:
 	await _scripted_walk("up", 90.0)
 	await _scripted_walk("right", 115.0)
 	await _scripted_walk("up", 180.0)
+
+	# ── THE DOORSTEP WAIT ──────────────────────────────────────────────────────────────
+	# The call advances on a click now, so the player decides how long it takes. They stop here, in
+	# front of their house, until they have read Ellie out - and then until the phone has actually
+	# flown off the screen, which is what `finished` waits for.
+	#
+	# THIS IS THE ONLY PLACE THE CUTSCENE WAITS. Everything before it - the drive, the taxi leaving,
+	# the walk up the path - plays over the call exactly as it did, and a player who has already
+	# clicked through every line walks straight into the look-around with no pause at all, because
+	# is_finished() is already true.
+	#
+	# is_finished() before the await, never just is_instance_valid(): the call frees itself the
+	# moment it emits, so awaiting one that has already ended would wait for ever.
+	if _intro_call != null and is_instance_valid(_intro_call) and not _intro_call.is_finished():
+		await _intro_call.finished
 
 	await get_tree().create_timer(0.5).timeout
 	_player.set_direction("left")
@@ -153,6 +201,16 @@ func _run_taxi_intro() -> void:
 	trans_tween.tween_callback(func():
 		SceneCache.change_scene("res://Scenes/Map_Scenes/Player_House_Downstairs.tscn")
 	)
+
+
+## Rings Ellie up a couple of seconds into the drive. Fire-and-forget: it returns as soon as the
+## call has been started, and the cutscene carries on around it.
+func _start_intro_phone_call() -> void:
+	await get_tree().create_timer(INTRO_CALL_DELAY).timeout
+	# The player can quit out of the cutscene; do not build a call into a scene that has gone.
+	if not is_inside_tree():
+		return
+	_intro_call = PhoneCall.play_from_data(self, INTRO_CALL_ID)
 
 
 func _drive_taxi_off() -> void:

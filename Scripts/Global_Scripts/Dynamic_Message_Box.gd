@@ -511,6 +511,14 @@ func set_mode(mode: String) -> void:
 	_set_caret_visible(not wants_buttons)
 
 
+## Shows or hides the advance caret WITHOUT changing the mode. set_mode() decides it for every
+## ordinary box; this is for the handful that are dismissed by something other than the player -
+## a timed phone call advances itself, so the caret would be promising an input that does nothing.
+## Call it AFTER set_mode(), which re-derives the caret from the mode.
+func show_advance_caret(shown: bool) -> void:
+	_set_caret_visible(shown)
+
+
 func is_ok_mode() -> bool:
 	return _mode == "ok"
 

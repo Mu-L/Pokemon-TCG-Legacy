@@ -1,0 +1,44 @@
+{
+  "_readme": [
+	"Every video call in the game, keyed by the id the code asks for:",
+	"    PhoneCall.play_from_data(self, \"ellie_intro\")",
+	"",
+	"Fields. Only `sprite` and `lines` are required.",
+	"  speaker      name on the message box / the pill over the picture",
+	"  screen_name  overrides the pill's text; \"\" hides the pill",
+	"  sprite       the caller's talking-head art in Image_Assets/Character_Sprites/Talking_Sprites,",
+	"               WITHOUT its _2 / _3 suffixes - every numbered frame after it is found",
+	"               automatically and used for the mouth animation. This is the COSTUME.",
+	"  background   what is behind them, from the same folder",
+	"  phone        the handset art, from the same folder. Defaults to iPhone4.",
+	"  colour       message_colour key, exactly as an NPC carries in All_NPC_Constant_Data.json",
+	"  auto_advance true = timed lines and no player input, for a call that plays over a cutscene.",
+	"               Leave it out for an ordinary call the player clicks through.",
+	"  lines        what they say, one message box per entry",
+	"",
+	"EXPRESSIONS. A line may open with an emotion tag in CAPITALS, and it applies to that line only:",
+	"    \"[HAPPY]Oh hey! So you're just coming round the corner then?\"",
+	"The next line with no tag goes back to the neutral face. A tag names a whole FRAME SET, so the",
+	"mouth still animates: draw the files as <sprite>_<Emotion>_1.png, _2.png, _3.png - for example",
+	"Rival_Ellie_Call_Dress_Clutch_Happy_1.png. Casing is forgiving, and missing art is a warning",
+	"plus the neutral face rather than a broken call. [TIME], [NAME] and lower-case bbcode such as",
+	"[center] are NOT expressions and pass through untouched.",
+	"",
+	"A new call is an entry here. A character calling in a different outfit, from a different place,",
+    "or at a different point in the story is a new entry - no code."
+  ],
+
+  "ellie_intro": {
+	"speaker": "Ellie",
+	"sprite": "Rival_Ellie_Call_Dress_Clutch",
+	"background": "BlurryTreeBackground",
+	"phone": "iPhone4",
+	"colour": "light_pink",
+	"auto_advance": false,
+	"lines": [
+	  "Oh hey! So you're just coming round the corner then? I bet the journey was quick. I'll see you drive right on by in a sec! The movers did a good job getting all your stuff in fine, they've finished and the truck's just left now",
+	  "You timed your move well, today's the first day it's been sunny this week and you know how depressing the harbour gets when it's cold and rainy like that. Even the forest is closed for now while they clear up the trees.",
+      "Well anyway, I'll let you drop your stuff off first and get settled in at least a little bit before I come to bug you. I'll drop by in a bit, see you soon!"
+	]
+  }
+}
